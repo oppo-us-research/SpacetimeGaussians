@@ -1,0 +1,4 @@
+build/
+diff_gaussian_rasterization_ch3.egg-info/*
+dist/
+.idea/

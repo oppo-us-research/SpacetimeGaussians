@@ -1,0 +1,13 @@
+*.pyc
+.vscode
+output
+
+build
+s8*
+.nfs*
+results/*
+data
+data/*
+test.npy
+*.sh
+result/*

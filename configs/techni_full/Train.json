@@ -1,0 +1,14 @@
+{
+  "resolution": 1,
+  "model": "ours_full",
+  "scaling_lr": 0.005,
+  "trbfslinit": 2.0,
+  "preprocesspoints": 3,
+  "test_iteration": 25000,
+  "densify": 3,
+  "desicnt": 12,
+  "duration": 50,
+  "rgbfunction": "sandwichnoact",
+  "loader": "technicolor",
+  "rdpip": "train_ours_full"
+}

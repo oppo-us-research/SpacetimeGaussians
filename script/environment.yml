@@ -1,0 +1,11 @@
+channels:
+  - conda-forge
+dependencies:
+  - plyfile=0.8.1
+  - pip=22.3.1
+  - tqdm
+  - pip:
+    - thirdparty/gaussian_splatting/submodules/gaussian_rasterization_ch9
+    - thirdparty/gaussian_splatting/submodules/simple-knn
+    - natsort
+    - scikit-image
