@@ -1,6 +1,6 @@
 # Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis
 
-[Project Page](https://oppo-us-research.github.io/SpacetimeGaussians-website/) | [Paper](https://arxiv.org/abs/xxx) | [Video](https://youtu.be/YsPPmf-E6Lg) | [Viewer & Pre-Trained Models](https://youtu.be/YsPPmf-E6Lg)
+[Project Page](https://oppo-us-research.github.io/SpacetimeGaussians-website/) | [Paper](https://arxiv.org/abs/xxx) | [Video](https://youtu.be/YsPPmf-E6Lg) | [Viewer & Pre-Trained Models](https://huggingface.co/stack93/spacetimegaussians/tree/main)
 
 
 This is an official implementation of the paper "Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis".</br>
@@ -124,9 +124,9 @@ python test.py --quiet --eval --skip_train --valloader technicolorvalid --config
 
 
 ## Real-Time Viewer 
-The viewer is based on [SIBR](https://sibr.gitlabpages.inria.fr/) and [Gaussian Splatting](https://github.com/graphdeco-inria/gaussian-splatting). First, download the viewer binary from [this link](https://huggingface.co/stack93/spacetimegaussians/tree/main) and unzip it. We also provide pre-trained models in the link (e.g., n3d_sear_steak_lite_allcam.zip contains the lite model that uses all views during training for the sear_steak scene in the Neural 3D Dataset).
+The viewer is based on [SIBR](https://sibr.gitlabpages.inria.fr/) and [Gaussian Splatting](https://github.com/graphdeco-inria/gaussian-splatting). First, download the viewer binary from [this link](https://huggingface.co/stack93/spacetimegaussians/tree/main) and unzip it. We also provide pre-trained models in the link. For example, [n3d_sear_steak_lite_allcam.zip](https://huggingface.co/stack93/spacetimegaussians/blob/main/n3d_sear_steak_lite_allcam.zip) contains the lite model that uses all views during training for the sear_steak scene in the Neural 3D Dataset.
 
-After downloading the released binary in ```thirdparty/gaussian_splatting/realtimedemolite```, you can use the following command to run the real-time viewer on Windows with CUDA >= 11.0. </br>
+You can use the following command to run the real-time viewer on Windows with CUDA >= 11.0. Adjust ```--iteration``` to match the training iterations of model. </br>
 ```
 ./<SIBR install dir>/bin/SIBR_gaussianViewer_app_rwdi.exe --iteration 25000 -m <path to trained model> 
 ``` 
