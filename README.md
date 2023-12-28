@@ -3,14 +3,14 @@
 [Project Page](https://oppo-us-research.github.io/SpacetimeGaussians-website/) | [Paper](https://arxiv.org/abs/xxx) | [Video](https://youtu.be/YsPPmf-E6Lg)
 
 
-This is an official implementation of the paper "Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis". </br>
-
-[Zhan Li](https://www.linkedin.com/in/zhan-li-cv/)<sup>1,2</sup>,
-[Zhang Chen](https://zhangchen8.github.io/)<sup>1,&dagger;</sup>,
-[Zhong Li](https://sites.google.com/site/lizhong19900216)<sup>1,&dagger;</sup>,
-[Yi Xu](https://www.linkedin.com/in/yi-xu-42654823/)<sup>1</sup>  
+This is an official implementation of the paper "Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis".</br>
+[Zhan Li](https://www.linkedin.com/in/zhan-li-cv/)<sup>1,2</sup>, 
+[Zhang Chen](https://zhangchen8.github.io/)<sup>1,&dagger;</sup>, 
+[Zhong Li](https://sites.google.com/site/lizhong19900216)<sup>1,&dagger;</sup>, 
+[Yi Xu](https://www.linkedin.com/in/yi-xu-42654823/)<sup>1</sup> </br>
 <sup>1</sup> OPPO US Research Center, <sup>2</sup> Portland State University </br>
 <sup>&dagger;</sup> Corresponding authors </br>
+
 <img src="assets/output.gif" width="100%"/></br>
 
 ## Table of Contents
@@ -19,7 +19,7 @@ This is an official implementation of the paper "Spacetime Gaussian Feature Spla
 1. [Training](#training)
 1. [Testing](#testing)
 1. [Real-Time Viewer](#real-time-viewer)
-1. [Creating Your Gaussians](#create-your-new-representations-and-render-pipeline)
+1. [Creating Your Gaussians](#create-your-new-representations-and-rendering-pipeline)
 1. [License Infomration](#license-information)
 1. [Acknowledgement](#acknowledgement)
 1. [Citations](#citations)
@@ -164,7 +164,7 @@ Please cite our paper if you find it useful for your research.
 ```
 @article{li2023spacetimegaussians,
   title={Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis},
-  author={Zhan Li, Cheng Zhang, Zhong Li and Yi Xu},
+  author={Li, Zhan and Chen, Zhang and Li, Zhong and Xu, Yi},
   journal={arXiv preprint arXiv:xxxxx},
   year={2023}
 }
