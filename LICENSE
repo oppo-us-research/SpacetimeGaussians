@@ -23,5 +23,4 @@ SOFTWARE.
 =============================================
 
 Additional Use Limitation
-SpacetimeGaussians is subject to the use limitation of Gaussian-Splatting, 
-please refer to Gaussian-Splatting License (./thirdparty/gaussian_splatting/LICENSE.md) for deatails.
+SpacetimeGaussians is subject to the use limitation of Gaussian-Splatting, please refer to Gaussian-Splatting License (./thirdparty/gaussian_splatting/LICENSE.md) for details.
