@@ -32,11 +32,20 @@ git clone https://github.com/oppo-us-research/SpacetimeGaussians.git
 cd SpacetimeGaussians
 ```
 
-Then run the following command to install the environments.
+Then run the following command to install the environments with conda.
 Note we will create two environments, one for preprocessing with colmap (```colmapenv```) and one for training and testing (```feature_splatting```). Training, testing and preprocessing are all done on the Ubuntu 20.04. </br>
 ```
 bash script/setup.sh
 ```
+Note that you may need to manually install the following packages if you encounter errors during the installation of the above command. </br>
+
+```
+conda activate feature_splatting
+pip install thirdparty/gaussian_splatting/submodules/gaussian_rasterization_ch9
+pip install thirdparty/gaussian_splatting/submodules/gaussian_rasterization_ch3
+pip install thirdparty/gaussian_splatting/submodules/forward_lite
+```
+
 ## Processing Datasets
 ### Neural 3D Dataset
 Download the dataset from [here](https://github.com/facebookresearch/Neural_3D_Video.git).
