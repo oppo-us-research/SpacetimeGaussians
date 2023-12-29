@@ -209,11 +209,10 @@ def controlgaussians(opt, gaussians, densify, iteration, scene,  visibility_filt
                     flag+=1
                     scene.recordpoints(iteration, "after densify")
                 else:
-                    if iteration < 7000 : # 
-                        prune_mask =  (gaussians.get_opacity < opt.opthr).squeeze()
-                        gaussians.prune_points(prune_mask)
-                        torch.cuda.empty_cache()
-                        scene.recordpoints(iteration, "addionally prune_mask")
+                    prune_mask =  (gaussians.get_opacity < opt.opthr).squeeze()
+                    gaussians.prune_points(prune_mask)
+                    torch.cuda.empty_cache()
+                    scene.recordpoints(iteration, "addionally prune_mask")
             if iteration % 3000 == 0 :
                 gaussians.reset_opacity()
         else:
