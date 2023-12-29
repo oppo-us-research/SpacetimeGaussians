@@ -33,7 +33,7 @@ cd SpacetimeGaussians
 ```
 
 Then run the following command to install the environments with conda.
-Note we will create two environments, one for preprocessing with colmap (```colmapenv```) and one for training and testing (```feature_splatting```). Training, testing and preprocessing are all done on the Ubuntu 20.04. </br>
+Note we will create two environments, one for preprocessing with colmap (```colmapenv```) and one for training and testing (```feature_splatting```). Training, testing and preprocessing have been tested on Ubuntu 20.04. </br>
 ```
 bash script/setup.sh
 ```
@@ -133,8 +133,11 @@ python test.py --quiet --eval --skip_train --valloader technicolorvalid --config
 
 
 ## Real-Time Viewer 
-The viewer is based on [SIBR](https://sibr.gitlabpages.inria.fr/) and [Gaussian Splatting](https://github.com/graphdeco-inria/gaussian-splatting). First, download the viewer binary from [this link](https://huggingface.co/stack93/spacetimegaussians/tree/main) and unzip it. We also provide pre-trained models in the link. For example, [n3d_sear_steak_lite_allcam.zip](https://huggingface.co/stack93/spacetimegaussians/blob/main/n3d_sear_steak_lite_allcam.zip) contains the lite model that uses all views during training for the sear_steak scene in the Neural 3D Dataset.
-
+The viewer is based on [SIBR](https://sibr.gitlabpages.inria.fr/) and [Gaussian Splatting](https://github.com/graphdeco-inria/gaussian-splatting). 
+### Pre-built Windows Binary
+Download the viewer binary from [this link](https://huggingface.co/stack93/spacetimegaussians/tree/main) and unzip it. We also provide pre-trained models in the link. For example, [n3d_sear_steak_lite_allcam.zip](https://huggingface.co/stack93/spacetimegaussians/blob/main/n3d_sear_steak_lite_allcam.zip) contains the lite model that uses all views during training for the sear_steak scene in the Neural 3D Dataset.
+### Installation from Source (coming soon)
+### Running the Real-Time Viewer
 You can use the following command to run the real-time viewer on Windows with CUDA >= 11.0. Adjust ```--iteration``` to match the training iterations of model. </br>
 ```
 ./<SIBR install dir>/bin/SIBR_gaussianViewer_app_rwdi.exe --iteration 25000 -m <path to trained model> 
