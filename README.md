@@ -1,6 +1,6 @@
 # Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis
 
-[Project Page](https://oppo-us-research.github.io/SpacetimeGaussians-website/) | [Paper](https://arxiv.org/abs/xxx) | [Video](https://youtu.be/YsPPmf-E6Lg) | [Viewer & Pre-Trained Models](https://huggingface.co/stack93/spacetimegaussians/tree/main)
+[Project Page](https://oppo-us-research.github.io/SpacetimeGaussians-website/) | [Paper](https://arxiv.org/abs/2312.16812) | [Video](https://youtu.be/YsPPmf-E6Lg) | [Viewer & Pre-Trained Models](https://huggingface.co/stack93/spacetimegaussians/tree/main)
 
 
 This is an official implementation of the paper "Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis".</br>
@@ -176,7 +176,7 @@ Please cite our paper if you find it useful for your research.
 @article{li2023spacetimegaussians,
   title={Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis},
   author={Li, Zhan and Chen, Zhang and Li, Zhong and Xu, Yi},
-  journal={arXiv preprint arXiv:xxxxx},
+  journal={arXiv preprint arXiv:2312.16812},
   year={2023}
 }
 ```
