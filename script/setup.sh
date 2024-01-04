@@ -41,7 +41,7 @@ conda create -n colmapenv python=3.8
 conda activate colmapenv
 pip install opencv-python-headless
 pip install tqdm
-pip install natasort
+pip install natsort
 pip install Pillow
 # just some files need torch be installed.
 conda install pytorch==1.12.1 -c pytorch -c conda-forge
