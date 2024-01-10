@@ -4,7 +4,7 @@
 
 
 This is an official implementation of the paper "Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis".</br>
-[Zhan Li](https://www.linkedin.com/in/zhan-li-cv/)<sup>1,2</sup>, 
+[Zhan Li](https://lizhan17.github.io/web/)<sup>1,2</sup>, 
 [Zhang Chen](https://zhangchen8.github.io/)<sup>1,&dagger;</sup>, 
 [Zhong Li](https://sites.google.com/site/lizhong19900216)<sup>1,&dagger;</sup>, 
 [Yi Xu](https://www.linkedin.com/in/yi-xu-42654823/)<sup>1</sup> </br>
