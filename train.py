@@ -249,6 +249,7 @@ def train(dataset, opt, pipe, saving_iterations, debug_from, densify=0, duration
            
             # guided sampling step
             if iteration > emsstartfromiterations and flagems == 2 and emscnt < selectedlength and viewpoint_cam.image_name in selectviews and (iteration - lasterems > 100): #["camera_0002"] :#selectviews :  #["camera_0002"]:
+                selectviews.pop(viewpoint_cam.image_name) # remove sampled cameras
                 emscnt += 1
                 lasterems = iteration
                 ssimcurrent = ssim(image.detach(), gt_image.detach()).item()
