@@ -133,7 +133,7 @@ def render_set(model_path, name, iteration, views, gaussians, pipeline, backgrou
         rendernumpy = rendering.permute(1,2,0).detach().cpu().numpy()
         gtnumpy = gt.permute(1,2,0).detach().cpu().numpy()
         
-        ssimv2 =  sk_ssim(rendernumpy, gtnumpy, multichannel=True, data_range=1.0)
+        ssimv2 =  sk_ssim(rendernumpy, gtnumpy, multichannel=True)
         ssimsv2.append(ssimv2)
 
 
