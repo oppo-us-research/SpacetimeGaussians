@@ -1,5 +1,7 @@
 # Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis
 
+## CVPR 2024
+
 [Project Page](https://oppo-us-research.github.io/SpacetimeGaussians-website/) | [Paper](https://arxiv.org/abs/2312.16812) | [Video](https://youtu.be/YsPPmf-E6Lg) | [Viewer & Pre-Trained Models](https://huggingface.co/stack93/spacetimegaussians/tree/main)
 
 
