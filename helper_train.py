@@ -73,6 +73,12 @@ def getrenderpip(option="train_ours_full"):
         from forward_lite import GaussianRasterizationSettings 
         from forward_lite import GaussianRasterizer 
         return test_ours_lite, GaussianRasterizationSettings, GaussianRasterizer
+    
+    elif option == "export_to_unity":
+        from thirdparty.gaussian_splatting.renderer import export_to_unity
+        from forward_lite import GaussianRasterizationSettings 
+        from forward_lite import GaussianRasterizer 
+        return export_to_unity, GaussianRasterizationSettings, GaussianRasterizer
     else:
         raise NotImplementedError("Rennder {} not implemented".format(option))
     

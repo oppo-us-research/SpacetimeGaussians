@@ -57,8 +57,7 @@ class ModelParams(ParamGroup):
         self.eval = False
         self.model = "gmodel" # 
         self.loader = "colmap" #
-        
-
+        self.section_size = 25
 
         super().__init__(parser, "Loading Parameters", sentinel)
 
@@ -128,6 +127,8 @@ class OptimizationParams(ParamGroup):
         self.prevpath = "1"
         self.loadall = 0
         self.removescale = 5
+        
+        self.section_iterations = 10000
         super().__init__(parser, "Optimization Parameters")
 
 def get_combined_args(parser : ArgumentParser):

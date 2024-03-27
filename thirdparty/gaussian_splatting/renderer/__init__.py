@@ -340,3 +340,47 @@ def train_ours_lite(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch
             "opacity": opacity,
             "depth": depth}
 
+
+
+def export_to_unity(timestamp, pc : GaussianModel, pipe, bg_color : torch.Tensor, scaling_modifier = 1.0, override_color = None, basicfunction = None,GRsetting=None, GRzer=None):
+
+    screenspace_points = torch.zeros_like(pc.get_xyz, dtype=pc.get_xyz.dtype, requires_grad=True, device="cuda") + 0
+
+    torch.cuda.synchronize()
+    startime = time.time()
+
+    tforpoly = timestamp - pc.get_trbfcenter
+    rotations = pc.get_rotation(tforpoly) # to try use 
+    colors_precomp = pc.get_features(tforpoly)
+
+    means2D = screenspace_points
+   
+    cov3D_precomp = None
+
+    shs = None
+ 
+    '''
+    rendered_image, radii = rasterizer(
+        timestamp = timestamp, 
+        trbfcenter = pc.get_trbfcenter,
+        trbfscale = pc.computedtrbfscale ,
+        motion = pc._motion,
+        means3D = pc.get_xyz,
+        means2D = means2D,
+        shs = shs,
+        colors_precomp = colors_precomp,
+        opacities = pc.computedopacity,
+        scales = pc.computedscales,
+        rotations = rotations,
+        cov3D_precomp = cov3D_precomp)
+    
+    
+    torch.cuda.synchronize()
+    duration = time.time() - startime 
+    return {"render": rendered_image,
+            "viewspace_points": screenspace_points,
+            "visibility_filter" : radii > 0,
+            "radii": radii,
+            "duration":duration}
+    '''
+

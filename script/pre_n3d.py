@@ -75,7 +75,7 @@ def preparecolmapdynerf(folder, offset=0):
     if not os.path.exists(savedir):
         os.mkdir(savedir)
     for folder in folderlist :
-        imagepath = os.path.join(folder, str(offset) + ".png")
+        imagepath = os.path.join(folder, str(offset).zfill(4) + ".png")
         imagesavepath = os.path.join(savedir, folder.split("/")[-2] + ".png")
 
         shutil.copy(imagepath, imagesavepath)
@@ -171,8 +171,8 @@ if __name__ == "__main__" :
     parser = argparse.ArgumentParser()
  
     parser.add_argument("--videopath", default="", type=str)
-    parser.add_argument("--startframe", default=0, type=int)
-    parser.add_argument("--endframe", default=50, type=int)
+    parser.add_argument("--startframe", default=1, type=int)
+    parser.add_argument("--endframe", default=60, type=int)
 
     args = parser.parse_args()
     videopath = args.videopath
@@ -199,8 +199,8 @@ if __name__ == "__main__" :
     ##### step1
     print("start extracting 300 frames from videos")
     videoslist = glob.glob(videopath + "*.mp4")
-    for v in tqdm.tqdm(videoslist):
-        extractframes(v)
+    #for v in tqdm.tqdm(videoslist):
+        #extractframes(v)
 
     
 
@@ -219,7 +219,4 @@ if __name__ == "__main__" :
     # ## step 4 run colmap, per frame, if error, reinstall opencv-headless 
     for offset in range(startframe, endframe):
         getcolmapsinglen3d(videopath, offset)
-
-
-
 
