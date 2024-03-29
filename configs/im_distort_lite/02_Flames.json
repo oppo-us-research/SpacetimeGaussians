@@ -1,0 +1,14 @@
+{
+  "model": "ours_lite",
+  "loader": "immersivess",
+  "scaling_lr": 0.001,
+  "movelr": 0.5,
+  "densify_until_iter": 12000,
+  "emsstart": 30000,
+  "densify": 6,
+  "rdpip": "train_ours_litess",
+  "rgbfunction": "sandwichnoactss",
+  "resolution": 1,
+  "duration": 50,
+  "test_iteration": 20000
+}

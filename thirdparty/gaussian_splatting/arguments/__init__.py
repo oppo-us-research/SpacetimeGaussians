@@ -44,6 +44,21 @@ class ParamGroup:
                 setattr(group, arg[0], arg[1])
         return group
 
+    def export_changed_args_to_json(self, args): 
+        defaults = {}
+        for arg in vars(args).items():
+            try:
+                if arg[0] in vars(self) or ("_" + arg[0]) in vars(self):
+                    defaultvalue = getattr(self, arg[0])
+                    # defaults[ arg[0] ] = defaultvalue
+                    if defaultvalue != arg[1]:
+                        defaults[arg[0]] = arg[1]
+            except:
+                pass 
+               
+        return defaults
+
+
 class ModelParams(ParamGroup): 
     def __init__(self, parser, sentinel=False):
         self.sh_degree = 3
@@ -128,6 +143,7 @@ class OptimizationParams(ParamGroup):
         self.prevpath = "1"
         self.loadall = 0
         self.removescale = 5
+        self.gtmask = 0 # 0 means not train with mask for undistorted gt image; 1 means 
         super().__init__(parser, "Optimization Parameters")
 
 def get_combined_args(parser : ArgumentParser):

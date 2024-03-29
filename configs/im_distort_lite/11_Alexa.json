@@ -1,0 +1,15 @@
+{
+  "model": "ours_lite",
+  "loader": "immersivess",
+  "position_lr_init": 1.6e-05,
+  "scaling_lr": 0.0015,
+  "movelr": 0.5,
+  "raystart": 1.0,
+  "densify": 8,
+  "emsstart": 30000,
+  "rdpip": "train_ours_litess",
+  "rgbfunction": "sandwichnoactss",
+  "resolution": 1,
+  "duration": 50,
+  "test_iteration": 20000
+}

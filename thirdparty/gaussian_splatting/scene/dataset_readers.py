@@ -439,8 +439,8 @@ def readColmapCamerasImmersive(cam_extrinsics, cam_intrinsics, images_folder, ne
             K[1, 2] = intr.params[3] #* 0.5
 
 
-
-            
+            if not os.path.exists(image_path):
+                image_path = image_path.replace("_S14","")
             assert os.path.exists(image_path), "Image {} does not exist!".format(image_path)
             image = Image.open(image_path)
             if j == startime:
@@ -538,7 +538,8 @@ def readColmapCamerasImmersiveTestonly(cam_extrinsics, cam_intrinsics, images_fo
 
             #halfH = round(height / 2.0 )
             #halfW = round(width / 2.0 )
-            
+            if not os.path.exists(image_path):
+                image_path = image_path.replace("_S14","")
             assert os.path.exists(image_path), "Image {} does not exist!".format(image_path)
 
             if image_name == "camera_0001":

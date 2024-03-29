@@ -1,0 +1,17 @@
+{
+  "model": "ours_full",
+  "loader": "immersivess",
+  "position_lr_init": 1.6e-05,
+  "feature_lr": 0.00475,
+  "scaling_lr": 0.0015,
+  "trbfs_lr": 0.04,
+  "movelr": 0.5,
+  "desicnt": 9,
+  "emsstart": 30000,
+  "densify": 4,
+  "rdpip": "train_ours_fullss",
+  "rgbfunction": "sandwichnoactss",
+  "resolution": 1,
+  "duration": 50,
+  "test_iteration": 10000
+}

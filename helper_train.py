@@ -73,6 +73,35 @@ def getrenderpip(option="train_ours_full"):
         from forward_lite import GaussianRasterizationSettings 
         from forward_lite import GaussianRasterizer 
         return test_ours_lite, GaussianRasterizationSettings, GaussianRasterizer
+    elif option == "train_ours_fullss":
+        from thirdparty.gaussian_splatting.renderer import train_ours_fullss
+        from diff_gaussian_rasterization_ch9 import GaussianRasterizationSettings 
+        from diff_gaussian_rasterization_ch9 import GaussianRasterizer  
+        return train_ours_fullss, GaussianRasterizationSettings, GaussianRasterizer
+    
+    elif option == "test_ours_fullss":
+        from thirdparty.gaussian_splatting.renderer import test_ours_fullss
+        from diff_gaussian_rasterization_ch9 import GaussianRasterizationSettings 
+        from diff_gaussian_rasterization_ch9 import GaussianRasterizer  
+        return test_ours_fullss, GaussianRasterizationSettings, GaussianRasterizer
+    
+    elif option == "test_ours_fullss_fused": # fused mlp in rendering
+        from thirdparty.gaussian_splatting.renderer import test_ours_fullss_fused
+        from forward_full import GaussianRasterizationSettings
+        from forward_full import GaussianRasterizer
+        return test_ours_fullss_fused, GaussianRasterizationSettings, GaussianRasterizer
+    
+    elif option == "train_ours_litess": 
+        from thirdparty.gaussian_splatting.renderer import train_ours_litess
+        from diff_gaussian_rasterization_ch3 import GaussianRasterizationSettings 
+        from diff_gaussian_rasterization_ch3 import GaussianRasterizer 
+        return train_ours_litess, GaussianRasterizationSettings, GaussianRasterizer    
+    
+    elif option == "test_ours_litess":
+        from thirdparty.gaussian_splatting.renderer import test_ours_litess
+        from forward_lite import GaussianRasterizationSettings 
+        from forward_lite import GaussianRasterizer  
+        return test_ours_litess,  GaussianRasterizationSettings, GaussianRasterizer
     else:
         raise NotImplementedError("Rennder {} not implemented".format(option))
     
@@ -249,7 +278,6 @@ def controlgaussians(opt, gaussians, densify, iteration, scene,  visibility_filt
         return flag
     
 
-
 def logicalorlist(listoftensor):
     mask = None 
     for idx, ele in enumerate(listoftensor):
@@ -309,7 +337,6 @@ def getfisheyemapper(folder, cameraname):
 
 
 def undistortimage(imagename, datasetpath,data):
-    
 
 
     video = os.path.dirname(datasetpath) # upper folder 
@@ -337,6 +364,23 @@ def undistortimage(imagename, datasetpath,data):
 
         image_size = (w, h)
         knew = np.zeros((3, 3), dtype=np.float32)
+
+
+        knew[0,0] = focalscale * intrinsics[0,0]
+        knew[1,1] = focalscale * intrinsics[1,1]
+        knew[0,2] =  view['principal_point'][0] # cx fixed half of the width
+        knew[1,2] =  view['principal_point'][1] #
+        knew[2,2] =  1.0
+
+
+        
+        
+        map1, map2 = cv2.fisheye.initUndistortRectifyMap(intrinsics, dis_cef, R=None, P=knew, size=(w, h), m1type=cv2.CV_32FC1)
+
+        undistorted_image = cv2.remap(data, map1, map2, interpolation=cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT)
+        undistorted_image = undistorted_image.clip(0,255.0) 
+        return undistorted_image
+
 
 def trbfunction(x): 
     return torch.exp(-1*x.pow(2))

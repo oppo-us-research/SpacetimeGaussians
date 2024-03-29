@@ -17,7 +17,7 @@ from scene.dataset_readers import sceneLoadTypeCallbacks
 from scene.oursfull import GaussianModel
 from arguments import ModelParams
 from PIL import Image 
-from utils.camera_utils import cameraList_from_camInfos, camera_to_JSON, cameraList_from_camInfosv2, cameraList_from_camInfosv2nogt
+from utils.camera_utils import camera_to_JSON, cameraList_from_camInfosv2, cameraList_from_camInfosv2nogt
 from helper_train import recordpointshelper, getfisheyemapper
 import torch 
 class Scene:

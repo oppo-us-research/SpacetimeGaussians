@@ -28,10 +28,11 @@ import numpy as np
 import shutil
 import pickle
 import natsort 
-
+import sys 
 import struct
 import pickle
 from scipy.spatial.transform import Rotation
+sys.path.append(".")
 from thirdparty.gaussian_splatting.utils.my_utils import rotmat2qvec
 from thirdparty.colmap.pre_colmap import * 
 from thirdparty.gaussian_splatting.helper3dg import getcolmapsingleimundistort
@@ -52,8 +53,8 @@ immmersivescaledict["11_Alexa"] = 1.0
 immmersivescaledict["12_Cave"] = 1.0
 
 for scene in Immersiveseven:
-    SCALEDICT[scene + "_dist"] = 1.0  # 
-    immmersivescaledict[scene + "_dist"] = 1.0
+    SCALEDICT[scene + "_undist"] = 1.0  # 
+    immmersivescaledict[scene + "_undist"] = 1.0
 
 
 

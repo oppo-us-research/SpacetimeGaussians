@@ -157,7 +157,7 @@ class Camerass(nn.Module):
                 self.original_image = image.clamp(0.0, 1.0).to(self.data_device)
             else:
                 self.original_image = image.clamp(0.0, 1.0).half().to(self.data_device)
-            print("read one")# lazy loader?
+            print("read one")# lazy loader already in it
             self.image_width = self.original_image.shape[2]
             self.image_height = self.original_image.shape[1]
 

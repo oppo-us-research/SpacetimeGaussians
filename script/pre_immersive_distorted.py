@@ -31,10 +31,11 @@ import argparse
 
 
 import natsort 
-
+import sys
 import struct
 import pickle
 from scipy.spatial.transform import Rotation
+sys.path.append(".")
 from thirdparty.gaussian_splatting.utils.my_utils import posetow2c_matrcs, rotmat2qvec, qvec2rotmat
 from thirdparty.gaussian_splatting.utils.graphics_utils import focal2fov, fov2focal
 from thirdparty.colmap.pre_colmap import *
@@ -59,7 +60,9 @@ for scene in Immersiveseven:
     SCALEDICT[scene + "_dist"] = immmersivescaledict[scene]  #immmersivescaledict[scene]  # to be checked with large scale
 
 
-        
+for scene in Immersiveseven:
+    immmersivescaledict[scene + "_S14"] =immmersivescaledict[scene]  # inner datset name
+    SCALEDICT[scene + "_S14"] = immmersivescaledict[scene]  #immmersivescaledict[scene]  # to be checked with large scale
 
 
 

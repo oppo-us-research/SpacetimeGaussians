@@ -112,9 +112,14 @@ def render_set(model_path, name, iteration, views, gaussians, pipeline, backgrou
 
 
     if rdpip == "train_ours_full":
-        render, GRsetting, GRzer = getrenderpip("test_ours_full") 
+        render, GRsetting, GRzer = getrenderpip("test_ours_full")  # can also use fused model, if add sigmoid.
     elif rdpip == "train_ours_lite":
         render, GRsetting, GRzer = getrenderpip("test_ours_lite") 
+    elif rdpip == "train_ours_fullss":
+        render, GRsetting, GRzer = getrenderpip("test_ours_fullss_fused") # 
+    elif rdpip == "train_ours_litess":
+        render, GRsetting, GRzer = getrenderpip("test_ours_litess") # 
+    
     else:
         render, GRsetting, GRzer = getrenderpip(rdpip) 
 

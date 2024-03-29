@@ -15,10 +15,10 @@ tmp/*
 
 
 
-
+output/*
 tmp/*
-
-
+demo.py
+forthparty/*
 renderer/__pycache__/*
 renderer/__pycache__/__init__.cpython-37.pyc
 thirdparty/mmcv/mmcv.egg-info/*
@@ -27,10 +27,15 @@ thirdparty/mmcv/docs/*
 thirdparty/mmcv/tests/data/*
 thirdparty/mmcv/*
 thirdparty/sibr_core/*
-thirdparty/forward_full/*
-thirdparty/realtimedemolite/extlibs/CudaRasterizer/CudaRasterizer
-thirdparty/realtimedemolite/extlibs/CudaRasterizer/CudaRasterizer
+# thirdparty/gaussian_splatting/submodules/forward_full/*
+# thirdparty/gaussian_splatting/realtimedemolite/*
 thirdparty/*/__pycache__/*
 thirdparty/gaussian_splatting/submodules/gaussian_rasterization_ch9/diff_gaussian_rasterization_ch9.egg-info/PKG-INFO
 script/__pycache__/pre_immersive_distorted.cpython-37.pyc
 script/__pycache__/pre_n3d.cpython-37.pyc
+thirdparty/gaussian_splatting/submodules/simple-knn/*egg-info
+s3w*.sh
+generatecode.py
+getconfig.py
+test.sh
+*.sh

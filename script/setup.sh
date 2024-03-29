@@ -14,7 +14,8 @@ pip install thirdparty/gaussian_splatting/submodules/gaussian_rasterization_ch9
 # Install for Gaussian Rasterization (Ch3) - Ours-Lite
 pip install thirdparty/gaussian_splatting/submodules/gaussian_rasterization_ch3
 
-
+# Install for Forward Full - Ours-Full (speed up testing, mlp fused, no sigmoid)
+pip install thirdparty/gaussian_splatting/submodules/forward_full
 
 # Install for Forward Lite - Ours-Lite (speed up testing)
 pip install thirdparty/gaussian_splatting/submodules/forward_lite
@@ -62,11 +63,24 @@ conda activate feature_splatting
 # cmake -Bbuild .
 # ```
 # after ```cmake -Bbuild .```, it will automaticly donwload third party libraries provided by Inria (takes several minutes for the first time). </br>
-# We need to delete two default folders (```CudaRasterizer```, ```projects```) and replace it with our provided codes.  
-# Just, replace the ```extlibs\CudaRasterizer``` with our ```realtimedemo\extlibs\CudaRasterizer```
-# And, replace the ```src\projects``` with our ```realtimedemo\src\projects```
-# after manually replace the two folders, you can rebuild the projects
+# We need to update two default folders (```CudaRasterizer```, ```projects```) with our provided codes.  
+# Just, update everthing except .git in ```extlibs\CudaRasterizer``` with our ```thirdparty\gaussian_splatting\realtimedemo\extlibs\CudaRasterizer```
+# And, update everthing except .git in  ```src\projects``` with our ```thirdparty\gaussian_splatting\realtimedemo\projects```
+# during replaceing, please keep the orginal .git dirtory. only replace the code
+# after manually update the two folders, you can rebuild the projects
 # ```
 # cmake -Bbuild .
 # cmake --build build --target install --config RelWithDebInfo
 # ```
+
+
+##### 
+# 1. do not remove orignal .git repo in the extlib/cudarasterizor (as the cmake function will use .git to check the exisiting of folder during building, otherwise a new version of original cudarasterizer is downloaded), please just replace the source file only
+
+# 2. if you meet cuda not found error and driver is cuda12 and cuda-toolkit(nvcc 11.8) on windows with visual studio 
+
+# # # remove CUDA 12.xxx in C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\BuildCustomizations  if you see  11.8
+
+# # # building process will select the highest cuda version, so delete CUDA 12.xxx if you want to build with CUDA nvcc 11.8 
+
+#### reactivate conda environment if cuda extension is built ? (not sure)
