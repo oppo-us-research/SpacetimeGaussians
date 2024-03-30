@@ -13,11 +13,11 @@ poses/__pycache__/*.pyc
 
 tmp/*
 
-
+script/__pycache__/*
 
 output/*
 tmp/*
-demo.py
+
 forthparty/*
 renderer/__pycache__/*
 renderer/__pycache__/__init__.cpython-37.pyc
@@ -27,14 +27,12 @@ thirdparty/mmcv/docs/*
 thirdparty/mmcv/tests/data/*
 thirdparty/mmcv/*
 thirdparty/sibr_core/*
-# thirdparty/gaussian_splatting/submodules/forward_full/*
-# thirdparty/gaussian_splatting/realtimedemolite/*
 thirdparty/*/__pycache__/*
 thirdparty/gaussian_splatting/submodules/gaussian_rasterization_ch9/diff_gaussian_rasterization_ch9.egg-info/PKG-INFO
 script/__pycache__/pre_immersive_distorted.cpython-37.pyc
 script/__pycache__/pre_n3d.cpython-37.pyc
 thirdparty/gaussian_splatting/submodules/simple-knn/*egg-info
-s3w*.sh
+
 generatecode.py
 getconfig.py
 test.sh

@@ -88,10 +88,10 @@ def train(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoint_
 
     tb_writer = prepare_output_and_logger(dataset)
     print("use model {}".format(dataset.model))
-    GaussianModel = getmodel(dataset.model) # gmodel, gmodelrgbonly
+    GaussianModel = getmodel(dataset.model) 
     
     gaussians = GaussianModel(dataset.sh_degree, rgbfunction)
-    gaussians.trbfslinit = -1*opt.trbfslinit # 
+    gaussians.trbfslinit = -1*opt.trbfslinit  # control the scale of trbf  
     gaussians.preprocesspoints = opt.preprocesspoints 
 
     rbfbasefunction = trbfunction
@@ -257,7 +257,7 @@ def train(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoint_
                 viewpoint_cam = camindex[i]
                 render_pkg = render(viewpoint_cam, gaussians, pipe, background,  override_color=None,  basicfunction=rbfbasefunction, GRsetting=GRsetting, GRzer=GRzer)
                 image, viewspace_point_tensor, visibility_filter, radii = render_pkg["render"], render_pkg["viewspace_points"], render_pkg["visibility_filter"], render_pkg["radii"]
-                gt_image = viewpoint_cam.original_image.float().cuda() # 
+                gt_image = viewpoint_cam.original_image.float().cuda() 
 
 
                 
@@ -591,10 +591,6 @@ def train(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoint_
                 viewspace_point_tensor = torch.cat((viewspace_point_tensor, torch.zeros(totalNnewpoints, 3).cuda(0)), dim=0)
 
 
-                
-            # as we reload trained 100k model, now we reload and train with another 100k, sum to 200k
-            # if iteration == 10005 :
-            #     return 
             if iteration < opt.iterations:
                 gaussians.optimizer.step()
                 gaussians.optimizer.zero_grad(set_to_none = True)

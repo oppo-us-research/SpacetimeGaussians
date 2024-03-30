@@ -36,12 +36,14 @@ sys.path.append(".")
 from thirdparty.gaussian_splatting.utils.my_utils import rotmat2qvec
 from thirdparty.colmap.pre_colmap import * 
 from thirdparty.gaussian_splatting.helper3dg import getcolmapsingleimundistort
+from script.pre_n3d import extractframes
+from script.pre_immersive_distorted import softlinkdataset
+
 import argparse
 
 SCALEDICT = {}
 
-# SCALEDICT["01_Welder_S11"] = 0.35
-# ["04_Truck", "09_Alexa", "10_Alexa", "11_Alexa", "12_Cave"]
+
 Immersiveseven = ["01_Welder",  "02_Flames", "04_Truck", "09_Alexa", "10_Alexa", "11_Alexa", "12_Cave"]
 immmersivescaledict = {}
 immmersivescaledict["01_Welder"] = 1.0
@@ -53,50 +55,8 @@ immmersivescaledict["11_Alexa"] = 1.0
 immmersivescaledict["12_Cave"] = 1.0
 
 for scene in Immersiveseven:
-    SCALEDICT[scene + "_undist"] = 1.0  # 
-    immmersivescaledict[scene + "_undist"] = 1.0
-
-
-
-def extractframes(videopath):
-    cam = cv2.VideoCapture(videopath)
-    ctr = 0
-    while ctr < 300:
-        _, frame = cam.read()
-
-        savepath = os.path.join(videopath.replace(".mp4", ""), str(ctr) + ".png")
-        if not os.path.exists(videopath.replace(".mp4", "")) :
-            os.makedirs(videopath.replace(".mp4", ""))
-        cv2.imwrite(savepath, frame)
-        ctr += 1 
-    cam.release()
-    return
-
-
-
-
-def extractframesx1(videopath):
-    cam = cv2.VideoCapture(videopath)
-    ctr = 0
-    sucess = True
-    while ctr < 300:
-        try:
-            _, frame = cam.read()
-
-            savepath = os.path.join(videopath.replace(".mp4", ""), str(ctr) + ".png")
-            if not os.path.exists(videopath.replace(".mp4", "")) :
-                os.makedirs(videopath.replace(".mp4", ""))
-
-
-            cv2.imwrite(savepath, frame)
-            ctr += 1 
-        except:
-            sucess = False
-            cam.release()
-            return
-    
-    cam.release()
-    return
+    SCALEDICT[scene + "_undist"] = 0.5  # 
+    immmersivescaledict[scene + "_undist"] = 0.5
 
 
 
@@ -104,7 +64,6 @@ def extractframesx1(videopath):
 
 def convertmodel2dbfiles(path, offset=0, scale=1.0):
     projectfolder = os.path.join(path, "colmap_" + str(offset))
-    #sparsefolder = os.path.join(projectfolder, "sparse/0")
     manualfolder = os.path.join(projectfolder, "manual")
 
     # if not os.path.exists(sparsefolder):
@@ -127,7 +86,7 @@ def convertmodel2dbfiles(path, offset=0, scale=1.0):
 
 
     import json 
-    with open(os.path.join(video + "models.json"), "r") as f:
+    with open(os.path.join(path, "models.json"), "r") as f:
         meta = json.load(f)
 
     for idx , camera in enumerate(meta):
@@ -219,12 +178,12 @@ def convertmodel2dbfiles(path, offset=0, scale=1.0):
 
 
 
-def imageundistort(video, offsetlist=[0],focalscale=1.0, fixfocal=None):
+def imageundistort_no_mapper(video, offsetlist=[0],focalscale=1.0, fixfocal=None):
     import cv2
     import numpy as np
     import os 
     import json 
-    with open(os.path.join(video + "models.json"), "r") as f:
+    with open(os.path.join(video, "models.json"), "r") as f:
                 meta = json.load(f)
 
     for idx , camera in enumerate(meta):
@@ -243,33 +202,42 @@ def imageundistort(video, offsetlist=[0],focalscale=1.0, fixfocal=None):
             imagepath = os.path.join(videofolder, str(offset) + ".png")
             imagesavepath = os.path.join(video, "colmap_" + str(offset), "input", folder + ".png")
             
+            
             inputimagefolder = os.path.join(video, "colmap_" + str(offset), "input")
             if not os.path.exists(inputimagefolder):
                 os.makedirs(inputimagefolder)
             assert os.path.exists(imagepath)
-            image = cv2.imread(imagepath).astype(np.float32) #/ 255.0
-            h, w = image.shape[:2]
-
-
-            image_size = (w, h)
-            knew = np.zeros((3, 3), dtype=np.float32)
-
- 
-            knew[0,0] = focalscale * intrinsics[0,0]
-            knew[1,1] = focalscale * intrinsics[1,1]
-            knew[0,2] =  view['principal_point'][0] # cx fixed half of the width
-            knew[1,2] =  view['principal_point'][1] #
-            knew[2,2] =  1.0
-
-
             
-            
-            map1, map2 = cv2.fisheye.initUndistortRectifyMap(intrinsics, dis_cef, R=None, P=knew, size=(w, h), m1type=cv2.CV_32FC1)
+            if not os.path.exists(imagesavepath):
+                try:
+                    image = cv2.imread(imagepath).astype(np.float32) #/ 255.0
+                except:
+                    print("failed to read image", imagepath)
+                    quit()
+                    
+                h, w = image.shape[:2]
 
-            undistorted_image = cv2.remap(image, map1, map2, interpolation=cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT)
-            undistorted_image = undistorted_image.clip(0,255.0).astype(np.uint8)
+                image_size = (w, h)
+                knew = np.zeros((3, 3), dtype=np.float32)
 
-            cv2.imwrite(imagesavepath, undistorted_image)
+    
+                knew[0,0] = focalscale * intrinsics[0,0]
+                knew[1,1] = focalscale * intrinsics[1,1]
+                knew[0,2] =  view['principal_point'][0] # cx fixed half of the width
+                knew[1,2] =  view['principal_point'][1] #
+                knew[2,2] =  1.0
+
+
+                
+                
+                map1, map2 = cv2.fisheye.initUndistortRectifyMap(intrinsics, dis_cef, R=None, P=knew, size=(w, h), m1type=cv2.CV_32FC1)
+
+                undistorted_image = cv2.remap(image, map1, map2, interpolation=cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT)
+                undistorted_image = undistorted_image.clip(0,255.0).astype(np.uint8)
+
+                cv2.imwrite(imagesavepath, undistorted_image)
+            else:
+                print("already exists")
 
 
 
@@ -277,25 +245,6 @@ def imageundistort(video, offsetlist=[0],focalscale=1.0, fixfocal=None):
 
 
 
-def softlinkdataset(originalpath, path, srcscene, scene):
-    videofolderlist = glob.glob(originalpath + "camera_*/")
-
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-    for videofolder in videofolderlist:
-        newlink = os.path.join(path, videofolder.split("/")[-2])
-        if os.path.exists(newlink):
-            print("already exists do not make softlink again")
-            quit()
-        assert not os.path.exists(newlink)
-        cmd = " ln -s " + videofolder + " " + newlink
-        os.system(cmd)
-        print(cmd)
-
-    originalmodel = originalpath + "models.json"
-    newmodel = path + "models.json"
-    shutil.copy(originalmodel, newmodel)
 if __name__ == "__main__" :
     parser = argparse.ArgumentParser()
  
@@ -339,7 +288,7 @@ if __name__ == "__main__" :
     scene = srcscene + postfix
     originalpath = videopath #
     originalvideo = originalpath# 43 1
-    path = videopath[:-1] + postfix
+    dstpath = videopath[:-1] + postfix
     video = originalpath  # 43 1 
     scale = immmersivescaledict[scene]
         
@@ -347,24 +296,21 @@ if __name__ == "__main__" :
 
     videoslist = glob.glob(originalvideo + "*.mp4")
     for v in tqdm.tqdm(videoslist):
-        extractframesx1(v)
+        extractframes(v)
 
 
-    softlinkdataset(originalpath, path, srcscene, scene)
+    softlinkdataset(originalpath, dstpath, srcscene, scene)
 
-    try:
-        imageundistort(video, offsetlist=[i for i in range(startframe,endframe)],focalscale=scale, fixfocal=None)
-    except:
-        print("undistort failed")
-        quit()
+    imageundistort_no_mapper(dstpath, offsetlist=[i for i in range(startframe,endframe)],focalscale=scale, fixfocal=None)
+  
     
     try:
         for offset in tqdm.tqdm(range(startframe, endframe)):
-            convertmodel2dbfiles(video, offset=offset, scale=scale)
+            convertmodel2dbfiles(dstpath, offset=offset, scale=scale)
     except:
         print("create colmap input failed, better clean the data and try again")
         quit()
 
     for offset in range(0, 50):
-        getcolmapsingleimundistort(video, offset=offset)
+        getcolmapsingleimundistort(dstpath, offset=offset)
 
