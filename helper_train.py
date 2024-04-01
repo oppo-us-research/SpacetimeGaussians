@@ -92,9 +92,9 @@ def get_render_pipe(option="train_ours_full"):
 
 def get_model(model="ours_full"):
     if model == "ours_full":
-        from thirdparty.gaussian_splatting.scene.ours_full import GaussianModel
+        from thirdparty.gaussian_splatting.scene.oursfull import GaussianModel
     elif model == "ours_lite":
-        from thirdparty.gaussian_splatting.scene.ours_lite import GaussianModel
+        from thirdparty.gaussian_splatting.scene.ourslite import GaussianModel
     else:
         raise NotImplementedError("model {} not implemented".format(model))
     return GaussianModel

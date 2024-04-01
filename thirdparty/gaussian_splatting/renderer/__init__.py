@@ -21,7 +21,7 @@ import time
 import torch
 import torch.nn.functional as F
 
-from thirdparty.gaussian_splatting.scene.ours_full import GaussianModel
+from thirdparty.gaussian_splatting.scene.oursfull import GaussianModel
 from thirdparty.gaussian_splatting.utils.graphics_utils import (
     focal2fov,
     fov2focal,

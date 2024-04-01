@@ -22,7 +22,7 @@ from thirdparty.gaussian_splatting.arguments import ModelParams
 from thirdparty.gaussian_splatting.scene.dataset_readers import (
     scene_load_type_callbacks,
 )
-from thirdparty.gaussian_splatting.scene.ours_full import GaussianModel
+from thirdparty.gaussian_splatting.scene.oursfull import GaussianModel
 from thirdparty.gaussian_splatting.utils.camera_utils import (
     camera_list_from_cam_infos,
     camera_list_from_cam_infos_v2,

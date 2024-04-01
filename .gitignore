@@ -163,3 +163,5 @@ cython_debug/
 log
 
 data_hyfluid
+thirdparty/mmcv
+
