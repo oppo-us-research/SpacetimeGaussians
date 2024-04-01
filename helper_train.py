@@ -36,307 +36,349 @@
 # derivative works in any form.
 #
 
-import torch
+import json
+import os
+
+import cv2
 import numpy as np
 import torch
+
 from simple_knn._C import distCUDA2
-import os 
-import json 
-import cv2
-from script.pre_immersive_distorted import SCALEDICT 
+
+from script.pre_immersive_distorted import SCALE_DICT
 
 
-def getrenderpip(option="train_ours_full"):
+def get_render_pipe(option="train_ours_full"):
     print("render option", option)
     if option == "train_ours_full":
-        from thirdparty.gaussian_splatting.renderer import train_ours_full 
-        from diff_gaussian_rasterization_ch9 import GaussianRasterizationSettings 
-        from diff_gaussian_rasterization_ch9 import GaussianRasterizer  
+        from diff_gaussian_rasterization_ch9 import (
+            GaussianRasterizationSettings,
+            GaussianRasterizer,
+        )
+
+        from thirdparty.gaussian_splatting.renderer import train_ours_full
+
         return train_ours_full, GaussianRasterizationSettings, GaussianRasterizer
 
-
     elif option == "train_ours_lite":
+        from diff_gaussian_rasterization_ch3 import (
+            GaussianRasterizationSettings,
+            GaussianRasterizer,
+        )
+
         from thirdparty.gaussian_splatting.renderer import train_ours_lite
-        from diff_gaussian_rasterization_ch3 import GaussianRasterizationSettings 
-        from diff_gaussian_rasterization_ch3 import GaussianRasterizer  
 
         return train_ours_lite, GaussianRasterizationSettings, GaussianRasterizer
-    
+
     elif option == "test_ours_full":
+        from diff_gaussian_rasterization_ch9 import (
+            GaussianRasterizationSettings,
+            GaussianRasterizer,
+        )
+
         from thirdparty.gaussian_splatting.renderer import test_ours_full
-        from diff_gaussian_rasterization_ch9 import GaussianRasterizationSettings 
-        from diff_gaussian_rasterization_ch9 import GaussianRasterizer  
+
         return test_ours_full, GaussianRasterizationSettings, GaussianRasterizer
 
-    elif option == "test_ours_lite": # forward only 
+    elif option == "test_ours_lite":  # forward only
+        from forward_lite import GaussianRasterizationSettings, GaussianRasterizer
+
         from thirdparty.gaussian_splatting.renderer import test_ours_lite
-        from forward_lite import GaussianRasterizationSettings 
-        from forward_lite import GaussianRasterizer 
+
         return test_ours_lite, GaussianRasterizationSettings, GaussianRasterizer
     else:
-        raise NotImplementedError("Rennder {} not implemented".format(option))
-    
-def getmodel(model="oursfull"):
+        raise NotImplementedError("Render {} not implemented".format(option))
+
+
+def get_model(model="ours_full"):
     if model == "ours_full":
-        from  thirdparty.gaussian_splatting.scene.oursfull import GaussianModel
+        from thirdparty.gaussian_splatting.scene.ours_full import GaussianModel
     elif model == "ours_lite":
-        from  thirdparty.gaussian_splatting.scene.ourslite import GaussianModel
+        from thirdparty.gaussian_splatting.scene.ours_lite import GaussianModel
     else:
-    
         raise NotImplementedError("model {} not implemented".format(model))
     return GaussianModel
 
-def getloss(opt, Ll1, ssim, image, gt_image, gaussians, radii):
-    if opt.reg == 1: # add optical flow loss
-        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + opt.regl * torch.sum(gaussians._motion) / gaussians._motion.shape[0]
-    elif opt.reg == 0 :
-        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image))   
-    elif opt.reg == 9 : #regulizor on the rotation
-        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + opt.regl * torch.sum(gaussians._omega[radii>0]**2)
-    elif opt.reg == 10 : #regulizor on the rotation
-        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + opt.regl * torch.sum(gaussians._motion[radii>0]**2)
+
+def get_loss(opt, Ll1, ssim, image, gt_image, gaussians, radii):
+    if opt.reg == 1:  # add optical flow loss
+        loss = (
+            (1.0 - opt.lambda_dssim) * Ll1
+            + opt.lambda_dssim * (1.0 - ssim(image, gt_image))
+            + opt.lambda_reg * torch.sum(gaussians._motion) / gaussians._motion.shape[0]
+        )
+    elif opt.reg == 0:
+        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image))
+    elif opt.reg == 9:  # regularizer on the rotation
+        loss = (
+            (1.0 - opt.lambda_dssim) * Ll1
+            + opt.lambda_dssim * (1.0 - ssim(image, gt_image))
+            + opt.lambda_reg * torch.sum(gaussians._omega[radii > 0] ** 2)
+        )
+    elif opt.reg == 10:  # regularizer on the rotation
+        loss = (
+            (1.0 - opt.lambda_dssim) * Ll1
+            + opt.lambda_dssim * (1.0 - ssim(image, gt_image))
+            + opt.lambda_reg * torch.sum(gaussians._motion[radii > 0] ** 2)
+        )
     elif opt.reg == 4:
-        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + opt.regl * torch.sum(gaussians.get_scaling) / gaussians._motion.shape[0]
+        loss = (
+            (1.0 - opt.lambda_dssim) * Ll1
+            + opt.lambda_dssim * (1.0 - ssim(image, gt_image))
+            + opt.lambda_reg * torch.sum(gaussians.get_scaling) / gaussians._motion.shape[0]
+        )
     elif opt.reg == 5:
-        loss = Ll1  
-    elif opt.reg == 6 :
+        loss = Ll1
+    elif opt.reg == 6:
         ratio = torch.mean(gt_image) - 0.5 + opt.lambda_dssim
         ratio = torch.clamp(ratio, 0.0, 1.0)
         loss = (1.0 - ratio) * Ll1 + ratio * (1.0 - ssim(image, gt_image))
-    elif opt.reg == 7 :
-        Ll1 = Ll1 / (torch.mean(gt_image) * 2.0) # normalize L1 loss
+    elif opt.reg == 7:
+        Ll1 = Ll1 / (torch.mean(gt_image) * 2.0)  # normalize L1 loss
         loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image))
-    elif opt.reg == 8 :
+    elif opt.reg == 8:
         N = gaussians._xyz.shape[0]
         mean = torch.mean(gaussians._xyz, dim=0, keepdim=True)
-        varaince = (mean - gaussians._xyz)**2 #/ N
-        loss = (1.0 - opt.lambda_dssim) * Ll1  + 0.0002*opt.lambda_dssim * torch.sum(varaince) / N
-    return loss 
+        variance = (mean - gaussians._xyz) ** 2  # / N
+        loss = (1.0 - opt.lambda_dssim) * Ll1 + 0.0002 * opt.lambda_dssim * torch.sum(variance) / N
+    return loss
 
 
-def freezweights(model, screenlist):
-    for k in screenlist:
-        grad_tensor = getattr(getattr(model, k), 'grad')
-        newgrad = torch.zeros_like(grad_tensor)
-        setattr(getattr(model, k), 'grad', newgrad)
-    return  
-
-def freezweightsbymask(model, screenlist, mask):
-    for k in screenlist:
-        grad_tensor = getattr(getattr(model, k), 'grad')
-        newgrad =  mask.unsqueeze(1)*grad_tensor #torch.zeros_like(grad_tensor)
-        setattr(getattr(model, k), 'grad', newgrad)
-    return  
+def freeze_weights(model, screen_list):
+    for k in screen_list:
+        grad_tensor = getattr(getattr(model, k), "grad")
+        new_grad = torch.zeros_like(grad_tensor)
+        setattr(getattr(model, k), "grad", new_grad)
+    return
 
 
-def freezweightsbymasknounsqueeze(model, screenlist, mask):
-    for k in screenlist:
-        grad_tensor = getattr(getattr(model, k), 'grad')
-        newgrad =  mask*grad_tensor #torch.zeros_like(grad_tensor)
-        setattr(getattr(model, k), 'grad', newgrad)
-    return  
+def freeze_weights_by_mask(model, screen_list, mask):
+    for k in screen_list:
+        grad_tensor = getattr(getattr(model, k), "grad")
+        new_grad = mask.unsqueeze(1) * grad_tensor  # torch.zeros_like(grad_tensor)
+        setattr(getattr(model, k), "grad", new_grad)
+    return
 
 
-def removeminmax(gaussians, maxbounds, minbounds):
-    maxx, maxy, maxz = maxbounds
-    minx, miny, minz = minbounds
+def freeze_weights_by_mask_no_unsqueeze(model, screen_list, mask):
+    for k in screen_list:
+        grad_tensor = getattr(getattr(model, k), "grad")
+        new_grad = mask * grad_tensor  # torch.zeros_like(grad_tensor)
+        setattr(getattr(model, k), "grad", new_grad)
+    return
+
+
+def remove_min_max(gaussians, max_bounds, min_bounds):
+    max_x, max_y, max_z = max_bounds
+    min_x, min_y, min_z = min_bounds
     xyz = gaussians._xyz
-    mask0 = xyz[:,0] > maxx.item()
-    mask1 = xyz[:,1] > maxy.item()
-    mask2 = xyz[:,2] > maxz.item()
+    mask0 = xyz[:, 0] > max_x.item()
+    mask1 = xyz[:, 1] > max_y.item()
+    mask2 = xyz[:, 2] > max_z.item()
 
-    mask3 = xyz[:,0] < minx.item()
-    mask4 = xyz[:,1] < miny.item()
-    mask5 = xyz[:,2] < minz.item()
-    mask =  logicalorlist([mask0, mask1, mask2, mask3, mask4, mask5])
-    gaussians.prune_points(mask) 
+    mask3 = xyz[:, 0] < min_x.item()
+    mask4 = xyz[:, 1] < min_y.item()
+    mask5 = xyz[:, 2] < min_z.item()
+    mask = logical_or_list([mask0, mask1, mask2, mask3, mask4, mask5])
+    gaussians.prune_points(mask)
     torch.cuda.empty_cache()
 
 
-def controlgaussians(opt, gaussians, densify, iteration, scene,  visibility_filter, radii, viewspace_point_tensor, flag, traincamerawithdistance=None, maxbounds=None, minbounds=None): 
-    if densify == 1: # n3d 
-        if iteration < opt.densify_until_iter :
-            if iteration ==  8001 : # 8001
-                omegamask = gaussians.zero_omegabymotion() # 1 we keep omega, 0 we freeze omega
-                gaussians.omegamask  = omegamask
-                scene.recordpoints(iteration, "seperate omega"+str(torch.sum(omegamask).item()))
-            elif iteration > 8001: # 8001
-                freezweightsbymasknounsqueeze(gaussians, ["_omega"], gaussians.omegamask)
-                rotationmask = torch.logical_not(gaussians.omegamask)
-                freezweightsbymasknounsqueeze(gaussians, ["_rotation"], rotationmask)
+def control_gaussians(
+    opt,
+    gaussians,
+    densify,
+    iteration,
+    scene,
+    visibility_filter,
+    radii,
+    viewspace_point_tensor,
+    flag,
+    train_camera_with_distance=None,
+    max_bounds=None,
+    min_bounds=None,
+):
+    if densify == 1:  # n3d
+        if iteration < opt.densify_until_iter:
+            if iteration == 8001:
+                omega_mask = gaussians.zero_omega_by_motion()  # 1 we keep omega, 0 we freeze omega
+                gaussians.omega_mask = omega_mask
+                scene.record_points(iteration, "separate omega" + str(torch.sum(omega_mask).item()))
+            elif iteration > 8001:
+                freeze_weights_by_mask_no_unsqueeze(gaussians, ["_omega"], gaussians.omega_mask)
+                rotation_mask = torch.logical_not(gaussians.omega_mask)
+                freeze_weights_by_mask_no_unsqueeze(gaussians, ["_rotation"], rotation_mask)
             if iteration > opt.densify_from_iter and iteration % opt.densification_interval == 0:
-                if flag < opt.desicnt:
-                    scene.recordpoints(iteration, "before densify")
+                if flag < opt.densify_cnt:
+                    scene.record_points(iteration, "before densify")
                     size_threshold = 20 if iteration > opt.opacity_reset_interval else None
-                    gaussians.densify_pruneclone(opt.densify_grad_threshold, opt.opthr, scene.cameras_extent, size_threshold)
-                    flag+=1
-                    scene.recordpoints(iteration, "after densify")
+                    gaussians.densify_prune_clone(
+                        opt.densify_grad_threshold, opt.opacity_threshold, scene.cameras_extent, size_threshold
+                    )
+                    flag += 1
+                    scene.record_points(iteration, "after densify")
                 else:
-                    if iteration < 7000 : # defalt 7000. 
-                        prune_mask =  (gaussians.get_opacity < opt.opthr).squeeze()
+                    if iteration < 7000:  # default 7000.
+                        prune_mask = (gaussians.get_opacity < opt.opacity_threshold).squeeze()
                         gaussians.prune_points(prune_mask)
                         torch.cuda.empty_cache()
-                        scene.recordpoints(iteration, "addionally prune_mask")
-            if iteration % 3000 == 0 :
+                        scene.record_points(iteration, "additionally prune_mask")
+            if iteration % 3000 == 0:
                 gaussians.reset_opacity()
         else:
-            freezweightsbymasknounsqueeze(gaussians, ["_omega"], gaussians.omegamask)
-            rotationmask = torch.logical_not(gaussians.omegamask)
-            freezweightsbymasknounsqueeze(gaussians, ["_rotation"], rotationmask) #uncomment freezeweight... for fast traning speed.
-            if iteration % 1000 == 500 :
-                zmask = gaussians._xyz[:,2] < 4.5  # 
-                gaussians.prune_points(zmask) 
+            freeze_weights_by_mask_no_unsqueeze(gaussians, ["_omega"], gaussians.omega_mask)
+            rotation_mask = torch.logical_not(gaussians.omega_mask)
+            freeze_weights_by_mask_no_unsqueeze(
+                gaussians, ["_rotation"], rotation_mask
+            )  # uncomment freeze weight ... for fast training speed.
+            if iteration % 1000 == 500:
+                z_mask = gaussians._xyz[:, 2] < 4.5  #
+                gaussians.prune_points(z_mask)
                 torch.cuda.empty_cache()
-            if iteration == 10000: 
-                removeminmax(gaussians, maxbounds, minbounds)
+            if iteration == 10000:
+                remove_min_max(gaussians, max_bounds, min_bounds)
         return flag
-    
-    elif densify == 2: # n3d 
-        if iteration < opt.densify_until_iter :
-            if iteration ==  8001 : # 8001
-                omegamask = gaussians.zero_omegabymotion() #
-                gaussians.omegamask  = omegamask
-                scene.recordpoints(iteration, "seperate omega"+str(torch.sum(omegamask).item()))
-            elif iteration > 8001: # 8001
-                freezweightsbymasknounsqueeze(gaussians, ["_omega"], gaussians.omegamask)
-                rotationmask = torch.logical_not(gaussians.omegamask)
-                freezweightsbymasknounsqueeze(gaussians, ["_rotation"], rotationmask)
+
+    elif densify == 2:  # n3d
+        if iteration < opt.densify_until_iter:
+            if iteration == 8001:  # 8001
+                omega_mask = gaussians.zero_omega_by_motion()  #
+                gaussians.omega_mask = omega_mask
+                scene.record_points(iteration, "separate omega" + str(torch.sum(omega_mask).item()))
+            elif iteration > 8001:  # 8001
+                freeze_weights_by_mask_no_unsqueeze(gaussians, ["_omega"], gaussians.omega_mask)
+                rotation_mask = torch.logical_not(gaussians.omega_mask)
+                freeze_weights_by_mask_no_unsqueeze(gaussians, ["_rotation"], rotation_mask)
             if iteration > opt.densify_from_iter and iteration % opt.densification_interval == 0:
-                if flag < opt.desicnt:
-                    scene.recordpoints(iteration, "before densify")
+                if flag < opt.densify_cnt:
+                    scene.record_points(iteration, "before densify")
                     size_threshold = 20 if iteration > opt.opacity_reset_interval else None
-                    gaussians.densify_pruneclone(opt.densify_grad_threshold, opt.opthr, scene.cameras_extent, size_threshold)
-                    flag+=1
-                    scene.recordpoints(iteration, "after densify")
+                    gaussians.densify_prune_clone(
+                        opt.densify_grad_threshold, opt.opacity_threshold, scene.cameras_extent, size_threshold
+                    )
+                    flag += 1
+                    scene.record_points(iteration, "after densify")
                 else:
-                    prune_mask =  (gaussians.get_opacity < opt.opthr).squeeze()
+                    prune_mask = (gaussians.get_opacity < opt.opacity_threshold).squeeze()
                     gaussians.prune_points(prune_mask)
                     torch.cuda.empty_cache()
-                    scene.recordpoints(iteration, "addionally prune_mask")
-            if iteration % 3000 == 0 :
+                    scene.record_points(iteration, "additionally prune_mask")
+            if iteration % 3000 == 0:
                 gaussians.reset_opacity()
         else:
-            if iteration % 1000 == 500 :
-                zmask = gaussians._xyz[:,2] < 4.5  # for stability  
-                gaussians.prune_points(zmask) 
+            if iteration % 1000 == 500:
+                z_mask = gaussians._xyz[:, 2] < 4.5  # for stability
+                gaussians.prune_points(z_mask)
                 torch.cuda.empty_cache()
         return flag
-    
 
-    elif densify == 3: # techni
-        if iteration < opt.densify_until_iter :
-            gaussians.max_radii2D[visibility_filter] = torch.max(gaussians.max_radii2D[visibility_filter], radii[visibility_filter])
+    elif densify == 3:  # techni
+        if iteration < opt.densify_until_iter:
+            gaussians.max_radii2D[visibility_filter] = torch.max(
+                gaussians.max_radii2D[visibility_filter], radii[visibility_filter]
+            )
             gaussians.add_densification_stats(viewspace_point_tensor, visibility_filter)
 
             if iteration > opt.densify_from_iter and iteration % opt.densification_interval == 0:
-                if flag < opt.desicnt:
-                    scene.recordpoints(iteration, "before densify")
+                if flag < opt.densify_cnt:
+                    scene.record_points(iteration, "before densify")
                     size_threshold = 20 if iteration > opt.opacity_reset_interval else None
-                    gaussians.densify_pruneclone(opt.densify_grad_threshold, opt.opthr, scene.cameras_extent, size_threshold)
-                    flag+=1
-                    scene.recordpoints(iteration, "after densify")
+                    gaussians.densify_prune_clone(
+                        opt.densify_grad_threshold, opt.opacity_threshold, scene.cameras_extent, size_threshold
+                    )
+                    flag += 1
+                    scene.record_points(iteration, "after densify")
                 else:
-                    if iteration < 7000 : # defalt 7000. 
-                        prune_mask =  (gaussians.get_opacity < opt.opthr).squeeze()
+                    if iteration < 7000:  # default 7000.
+                        prune_mask = (gaussians.get_opacity < opt.opacity_threshold).squeeze()
                         gaussians.prune_points(prune_mask)
                         torch.cuda.empty_cache()
-                        scene.recordpoints(iteration, "addionally prune_mask")
-            if iteration % opt.opacity_reset_interval == 0 :
+                        scene.record_points(iteration, "additionally prune_mask")
+            if iteration % opt.opacity_reset_interval == 0:
                 gaussians.reset_opacity()
         else:
-            if iteration == 10000: 
-                removeminmax(gaussians, maxbounds, minbounds)
+            if iteration == 10000:
+                remove_min_max(gaussians, max_bounds, min_bounds)
         return flag
-    
 
 
-def logicalorlist(listoftensor):
-    mask = None 
-    for idx, ele in enumerate(listoftensor):
-        if idx == 0 :
-            mask = ele 
+def logical_or_list(tensor_list):
+    mask = None
+    for idx, ele in enumerate(tensor_list):
+        if idx == 0:
+            mask = ele
         else:
             mask = torch.logical_or(mask, ele)
-    return mask 
+    return mask
 
 
+def record_points_helper(model_path, numpoints, iteration, string):
+    txt_path = os.path.join(model_path, "exp_log.txt")
 
-def recordpointshelper(model_path, numpoints, iteration, string):
-    txtpath = os.path.join(model_path, "exp_log.txt")
-    
-    with open(txtpath, 'a') as file:
-        file.write("iteration at "+ str(iteration) + "\n")
-        file.write(string + " pointsnumber " + str(numpoints) + "\n")
-
-
+    with open(txt_path, "a") as file:
+        file.write("iteration at " + str(iteration) + "\n")
+        file.write(string + " points number " + str(numpoints) + "\n")
 
 
 def pix2ndc(v, S):
     return (v * 2.0 + 1.0) / S - 1.0
 
 
+def reload_helper(gaussians, opt, max_x, max_y, max_z, min_x, min_y, min_z):
+    given_path = opt.prev_path
+    if opt.load_all == 0:
+        gaussians.load_ply_and_min_max(given_path, max_x, max_y, max_z, min_x, min_y, min_z)
+    elif opt.load_all == 1:
+        gaussians.load_ply_and_min_max_all(given_path, max_x, max_y, max_z, min_x, min_y, min_z)
+    elif opt.load_all == 2:
+        gaussians.load_ply(given_path)
+    elif opt.load_all == 3:
+        gaussians.load_ply_and_min_max_Y(given_path, max_x, max_y, max_z, min_x, min_y, min_z)
+
+    gaussians.max_radii2D = torch.zeros((gaussians.get_xyz.shape[0]), device="cuda")
+    return
 
 
-def reloadhelper(gaussians, opt, maxx, maxy, maxz,  minx, miny, minz):
-    givenpath = opt.prevpath
-    if opt.loadall == 0:
-        gaussians.load_plyandminmax(givenpath, maxx, maxy, maxz,  minx, miny, minz)
-    elif opt.loadall == 1 :
-        gaussians.load_plyandminmaxall(givenpath, maxx, maxy, maxz,  minx, miny, minz)
-    elif opt.loadall == 2 :        
-        gaussians.load_ply(givenpath)
-    elif opt.loadall == 3:
-        gaussians.load_plyandminmaxY(givenpath, maxx, maxy, maxz,  minx, miny, minz)
-
-    gaussians.max_radii2D =  torch.zeros((gaussians.get_xyz.shape[0]), device="cuda")
-    return 
-
-def getfisheyemapper(folder, cameraname):
-    parentfolder = os.path.dirname(folder)
-    distoritonflowpath = os.path.join(parentfolder, cameraname + ".npy")
-    distoritonflow = np.load(distoritonflowpath)
-    distoritonflow = torch.from_numpy(distoritonflow).unsqueeze(0).float().cuda()
-    return distoritonflow
+def get_fish_eye_mapper(folder, camera_name):
+    parent_folder = os.path.dirname(folder)
+    distortion_flow_path = os.path.join(parent_folder, camera_name + ".npy")
+    distortion_flow = np.load(distortion_flow_path)
+    distortion_flow = torch.from_numpy(distortion_flow).unsqueeze(0).float().cuda()
+    return distortion_flow
 
 
+def undistort_image(image_name, dataset_path, data):
 
-
-
-
-
-
-
-
-
-def undistortimage(imagename, datasetpath,data):
-    
-
-
-    video = os.path.dirname(datasetpath) # upper folder 
+    video = os.path.dirname(dataset_path)  # upper folder
     with open(os.path.join(video + "/models.json"), "r") as f:
-                meta = json.load(f)
+        meta = json.load(f)
 
-    for idx , camera in enumerate(meta):
-        folder = camera['name'] # camera_0001
+    for idx, camera in enumerate(meta):
+        folder = camera["name"]  # camera_0001
         view = camera
-        intrinsics = np.array([[view['focal_length'], 0.0, view['principal_point'][0]],
-                            [0.0, view['focal_length'], view['principal_point'][1]],
-                            [0.0, 0.0, 1.0]])
+        intrinsics = np.array(
+            [
+                [view["focal_length"], 0.0, view["principal_point"][0]],
+                [0.0, view["focal_length"], view["principal_point"][1]],
+                [0.0, 0.0, 1.0],
+            ]
+        )
         dis_cef = np.zeros((4))
 
-        dis_cef[:2] = np.array(view['radial_distortion'])[:2]
-        if folder != imagename:
-             continue
+        dis_cef[:2] = np.array(view["radial_distortion"])[:2]
+        if folder != image_name:
+            continue
         print("done one camera")
         map1, map2 = None, None
-        sequencename = os.path.basename(video)
-        focalscale = SCALEDICT[sequencename]
- 
-        h, w = data.shape[:2]
+        sequence_name = os.path.basename(video)
+        focal_scale = SCALE_DICT[sequence_name]
 
+        h, w = data.shape[:2]
 
         image_size = (w, h)
         knew = np.zeros((3, 3), dtype=np.float32)
 
-def trbfunction(x): 
-    return torch.exp(-1*x.pow(2))
+
+def trb_function(x):
+    # Temporal Radial Basis Function
+    return torch.exp(-1 * x.pow(2))

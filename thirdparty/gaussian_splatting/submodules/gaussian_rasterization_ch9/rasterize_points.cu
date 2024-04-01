@@ -42,10 +42,10 @@ RasterizeGaussiansCUDA(
 	const torch::Tensor& rotations,
 	const float scale_modifier,
 	const torch::Tensor& cov3D_precomp,
-	const torch::Tensor& viewmatrix,
-	const torch::Tensor& projmatrix,
-	const float tan_fovx, 
-	const float tan_fovy,
+	const torch::Tensor& view_matrix,
+	const torch::Tensor& proj_matrix,
+	const float tan_fov_x, 
+	const float tan_fov_y,
     const int image_height,
     const int image_width,
 	const torch::Tensor& sh,
@@ -101,11 +101,11 @@ RasterizeGaussiansCUDA(
 		scale_modifier,
 		rotations.contiguous().data_ptr<float>(),
 		cov3D_precomp.contiguous().data<float>(), 
-		viewmatrix.contiguous().data<float>(), 
-		projmatrix.contiguous().data<float>(),
+		view_matrix.contiguous().data<float>(), 
+		proj_matrix.contiguous().data<float>(),
 		campos.contiguous().data<float>(),
-		tan_fovx,
-		tan_fovy,
+		tan_fov_x,
+		tan_fov_y,
 		prefiltered,
 		out_color.contiguous().data<float>(),
 		out_depth.contiguous().data<float>(),
@@ -124,10 +124,10 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
 	const torch::Tensor& rotations,
 	const float scale_modifier,
 	const torch::Tensor& cov3D_precomp,
-	const torch::Tensor& viewmatrix,
-    const torch::Tensor& projmatrix,
-	const float tan_fovx,
-	const float tan_fovy,
+	const torch::Tensor& view_matrix,
+    const torch::Tensor& proj_matrix,
+	const float tan_fov_x,
+	const float tan_fov_y,
     const torch::Tensor& dL_dout_color,
 	const torch::Tensor& sh,
 	const int degree,
@@ -169,11 +169,11 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
 	  scale_modifier,
 	  rotations.data_ptr<float>(),
 	  cov3D_precomp.contiguous().data<float>(),
-	  viewmatrix.contiguous().data<float>(),
-	  projmatrix.contiguous().data<float>(),
+	  view_matrix.contiguous().data<float>(),
+	  proj_matrix.contiguous().data<float>(),
 	  campos.contiguous().data<float>(),
-	  tan_fovx,
-	  tan_fovy,
+	  tan_fov_x,
+	  tan_fov_y,
 	  radii.contiguous().data<int>(),
 	  reinterpret_cast<char*>(geomBuffer.contiguous().data_ptr()),
 	  reinterpret_cast<char*>(binningBuffer.contiguous().data_ptr()),
@@ -195,8 +195,8 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
 
 torch::Tensor markVisible(
 		torch::Tensor& means3D,
-		torch::Tensor& viewmatrix,
-		torch::Tensor& projmatrix)
+		torch::Tensor& view_matrix,
+		torch::Tensor& proj_matrix)
 { 
   const int P = means3D.size(0);
   
@@ -206,8 +206,8 @@ torch::Tensor markVisible(
   {
 	CudaRasterizer::Rasterizer::markVisible(P,
 		means3D.contiguous().data<float>(),
-		viewmatrix.contiguous().data<float>(),
-		projmatrix.contiguous().data<float>(),
+		view_matrix.contiguous().data<float>(),
+		proj_matrix.contiguous().data<float>(),
 		present.contiguous().data<bool>());
   }
   

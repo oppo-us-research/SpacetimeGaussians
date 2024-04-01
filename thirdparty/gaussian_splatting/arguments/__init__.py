@@ -3,21 +3,24 @@
 # GRAPHDECO research group, https://team.inria.fr/graphdeco
 # All rights reserved.
 #
-# This software is free for non-commercial, research and evaluation use 
+# This software is free for non-commercial, research and evaluation use
 # under the terms of the LICENSE.md file.
 #
 # For inquiries contact  george.drettakis@inria.fr
 #
 
-from argparse import ArgumentParser, Namespace
-import sys
 import os
+import sys
+
+from argparse import ArgumentParser, Namespace
+
 
 class GroupParams:
     pass
 
+
 class ParamGroup:
-    def __init__(self, parser: ArgumentParser, name : str, fill_none = False):
+    def __init__(self, parser: ArgumentParser, name: str, fill_none=False):
         group = parser.add_argument_group(name)
         for key, value in vars(self).items():
             shorthand = False
@@ -25,7 +28,7 @@ class ParamGroup:
                 shorthand = True
                 key = key[1:]
             t = type(value)
-            value = value if not fill_none else None 
+            value = value if not fill_none else None
             if shorthand:
                 if t == bool:
                     group.add_argument("--" + key, ("-" + key[0:1]), default=value, action="store_true")
@@ -44,7 +47,8 @@ class ParamGroup:
                 setattr(group, arg[0], arg[1])
         return group
 
-class ModelParams(ParamGroup): 
+
+class ModelParams(ParamGroup):
     def __init__(self, parser, sentinel=False):
         self.sh_degree = 3
         self._source_path = ""
@@ -53,12 +57,10 @@ class ModelParams(ParamGroup):
         self._resolution = -1
         self._white_background = False
         self.data_device = "cuda"
-        self.veryrify_llff = 0
+        self.verify_llff = 0
         self.eval = False
-        self.model = "gmodel" # 
-        self.loader = "colmap" #
-        
-
+        self.model = "gmodel"  #
+        self.loader = "colmap"  #
 
         super().__init__(parser, "Loading Parameters", sentinel)
 
@@ -67,12 +69,14 @@ class ModelParams(ParamGroup):
         g.source_path = os.path.abspath(g.source_path)
         return g
 
+
 class PipelineParams(ParamGroup):
     def __init__(self, parser):
         self.convert_SHs_python = False
         self.compute_cov3D_python = False
         self.debug = False
         super().__init__(parser, "Pipeline Parameters")
+
 
 class OptimizationParams(ParamGroup):
     def __init__(self, parser):
@@ -82,15 +86,15 @@ class OptimizationParams(ParamGroup):
         self.position_lr_delay_mult = 0.01
         self.position_lr_max_steps = 30_000
         self.feature_lr = 0.0025
-        self.featuret_lr = 0.001
+        self.feature_t_lr = 0.001
         self.opacity_lr = 0.05
         self.scaling_lr = 0.005
 
-        self.trbfc_lr = 0.0001 # 
-        self.trbfs_lr = 0.03
-        self.trbfslinit = 0.0 # 
+        self.trbf_c_lr = 0.0001  #
+        self.trbf_s_lr = 0.03
+        self.trbf_scale_init = 0.0  #
         self.batch = 2
-        self.movelr = 3.5
+        self.move_lr = 3.5
 
         self.omega_lr = 0.0001
         self.rotation_lr = 0.001
@@ -103,51 +107,52 @@ class OptimizationParams(ParamGroup):
         self.densify_until_iter = 9000
         self.densify_grad_threshold = 0.0002
         self.rgb_lr = 0.0001
-        self.desicnt = 6
-        self.reg = 0 
-        self.regl = 0.0001 
-        self.shrinkscale = 2.0 
-        self.randomfeature = 0 
+        self.densify_cnt = 6
+        self.reg = 0
+        self.lambda_reg = 0.0001
+        self.shrinkscale = 2.0
+        self.randomfeature = 0
         self.emstype = 0
         self.radials = 10.0
-        self.farray = 2 # 
-        self.emsstart = 1600 #small for debug
+        self.new_ray_step = 2  #
+        self.ems_start = 1600  # small for debug
         self.losstart = 200
-        self.saveemppoints = 0 #
-        self.prunebysize = 0 
-        self.emsthr = 0.6  
-        self.opthr = 0.005
-        self.selectiveview = 0  
-        self.preprocesspoints = 0  
+        self.saveemppoints = 0  #
+        self.prunebysize = 0
+        self.ems_threshold = 0.6
+        self.opacity_threshold = 0.005
+        self.selectiveview = 0
+        self.preprocess_points = 0
         self.fzrotit = 8001
-        self.addsphpointsscale = 0.8  
-        self.gnumlimit = 330000 
-        self.rayends = 7.5
-        self.raystart = 0.7
-        self.shuffleems = 1
-        self.prevpath = "1"
-        self.loadall = 0
+        self.add_sph_points_scale = 0.8
+        self.gnumlimit = 330000
+        self.ray_end = 7.5
+        self.ray_start = 0.7
+        self.shuffle_ems = 1
+        self.prev_path = "1"
+        self.load_all = 0
         self.removescale = 5
         super().__init__(parser, "Optimization Parameters")
 
-def get_combined_args(parser : ArgumentParser):
-    cmdlne_string = sys.argv[1:]
-    cfgfile_string = "Namespace()"
-    args_cmdline = parser.parse_args(cmdlne_string)
+
+def get_combined_args(parser: ArgumentParser):
+    cmd_line_string = sys.argv[1:]
+    cfg_file_string = "Namespace()"
+    args_cmdline = parser.parse_args(cmd_line_string)
 
     try:
-        cfgfilepath = os.path.join(args_cmdline.model_path, "cfg_args")
-        print("Looking for config file in", cfgfilepath)
-        with open(cfgfilepath) as cfg_file:
-            print("Config file found: {}".format(cfgfilepath))
-            cfgfile_string = cfg_file.read()
+        cfg_file_path = os.path.join(args_cmdline.model_path, "cfg_args")
+        print("Looking for config file in", cfg_file_path)
+        with open(cfg_file_path) as cfg_file:
+            print("Config file found: {}".format(cfg_file_path))
+            cfg_file_string = cfg_file.read()
     except TypeError:
         print("Config file not found at")
         pass
-    args_cfgfile = eval(cfgfile_string)
+    args_cfg_file = eval(cfg_file_string)
 
-    merged_dict = vars(args_cfgfile).copy()
-    for k,v in vars(args_cmdline).items():
+    merged_dict = vars(args_cfg_file).copy()
+    for k, v in vars(args_cmdline).items():
         if v != None:
             merged_dict[k] = v
     return Namespace(**merged_dict)

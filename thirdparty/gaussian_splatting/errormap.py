@@ -3,25 +3,30 @@
 # GRAPHDECO research group, https://team.inria.fr/graphdeco
 # All rights reserved.
 #
-# This software is free for non-commercial, research and evaluation use 
+# This software is free for non-commercial, research and evaluation use
 # under the terms of the LICENSE.md file.
 #
 # For inquiries contact  george.drettakis@inria.fr
 #
 
-from pathlib import Path
+import json
 import os
-from PIL import Image
+
+from argparse import ArgumentParser
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 import torch
 import torchvision.transforms.functional as tf
-from utils.loss_utils import ssim
+
 from lpipsPyTorch import lpips
-import json
+from PIL import Image
 from tqdm import tqdm
 from utils.image_utils import psnr
-from argparse import ArgumentParser
-import matplotlib.pyplot as plt
-def readImages(renders_dir, gt_dir):
+from utils.loss_utils import ssim
+
+
+def read_images(renders_dir, gt_dir):
     renders = []
     gts = []
     image_names = []
@@ -33,12 +38,13 @@ def readImages(renders_dir, gt_dir):
         image_names.append(fname)
     return renders, gts, image_names
 
+
 def evaluate(model_paths):
 
     full_dict = {}
     per_view_dict = {}
-    full_dict_polytopeonly = {}
-    per_view_dict_polytopeonly = {}
+    full_dict_poly_to_pe_only = {}
+    per_view_dict_poly_to_pe_only = {}
     print("")
 
     for scene_dir in model_paths:
@@ -46,67 +52,74 @@ def evaluate(model_paths):
             print("Scene:", scene_dir)
             full_dict[scene_dir] = {}
             per_view_dict[scene_dir] = {}
-            full_dict_polytopeonly[scene_dir] = {}
-            per_view_dict_polytopeonly[scene_dir] = {}
+            full_dict_poly_to_pe_only[scene_dir] = {}
+            per_view_dict_poly_to_pe_only[scene_dir] = {}
 
             test_dir = Path(scene_dir) / "test"
             cmap = plt.cm.cubehelix  # cubehelix inferno
             zmin = 0.0
             zmax = 0.2
-            
+
             for method in os.listdir(test_dir):
                 print("Method:", method)
 
                 full_dict[scene_dir][method] = {}
                 per_view_dict[scene_dir][method] = {}
-                full_dict_polytopeonly[scene_dir][method] = {}
-                per_view_dict_polytopeonly[scene_dir][method] = {}
+                full_dict_poly_to_pe_only[scene_dir][method] = {}
+                per_view_dict_poly_to_pe_only[scene_dir][method] = {}
 
                 method_dir = test_dir / method
-                gt_dir = method_dir/ "gt"
+                gt_dir = method_dir / "gt"
                 renders_dir = method_dir / "renders"
-                renders, gts, image_names = readImages(renders_dir, gt_dir)
+                renders, gts, image_names = read_images(renders_dir, gt_dir)
 
                 ssims = []
                 psnrs = []
                 lpipss = []
 
                 for idx in tqdm(range(len(renders)), desc="Metric evaluation progress"):
-                    ssims.append(ssim(renders[idx], gts[idx])) # [1, 3, 1014, 1352])
+                    ssims.append(ssim(renders[idx], gts[idx]))  # [1, 3, 1014, 1352])
                     psnrs.append(psnr(renders[idx], gts[idx]))
-                    lpipss.append(lpips(renders[idx], gts[idx], net_type='vgg'))
+                    lpipss.append(lpips(renders[idx], gts[idx], net_type="vgg"))
 
+                    # plt.cm.inferno #plt.cm.cubehelix
 
-                    #plt.cm.inferno #plt.cm.cubehelix
-                    
                     error = renders[idx] - gts[idx]
                     error = error.abs().mean(dim=1, keepdim=True).squeeze().cpu().numpy()
                     norm = plt.Normalize(vmin=zmin, vmax=zmax)
                     errorimage = cmap(norm(error))
-                    errorimagepath = os.path.join(method_dir, "error", image_names[idx])
-                    if not os.path.exists(os.path.dirname(errorimagepath)):
-                        os.makedirs(os.path.dirname(errorimagepath))
-                    plt.imsave(errorimagepath, errorimage)
-
+                    errorimage_path = os.path.join(method_dir, "error", image_names[idx])
+                    if not os.path.exists(os.path.dirname(errorimage_path)):
+                        os.makedirs(os.path.dirname(errorimage_path))
+                    plt.imsave(errorimage_path, errorimage)
 
                 print("  SSIM : {:>12.7f}".format(torch.tensor(ssims).mean(), ".5"))
                 print("  PSNR : {:>12.7f}".format(torch.tensor(psnrs).mean(), ".5"))
                 print("  LPIPS: {:>12.7f}".format(torch.tensor(lpipss).mean(), ".5"))
                 print("")
 
-                full_dict[scene_dir][method].update({"SSIM": torch.tensor(ssims).mean().item(),
-                                                        "PSNR": torch.tensor(psnrs).mean().item(),
-                                                        "LPIPS": torch.tensor(lpipss).mean().item()})
-                per_view_dict[scene_dir][method].update({"SSIM": {name: ssim for ssim, name in zip(torch.tensor(ssims).tolist(), image_names)},
-                                                            "PSNR": {name: psnr for psnr, name in zip(torch.tensor(psnrs).tolist(), image_names)},
-                                                            "LPIPS": {name: lp for lp, name in zip(torch.tensor(lpipss).tolist(), image_names)}})
+                full_dict[scene_dir][method].update(
+                    {
+                        "SSIM": torch.tensor(ssims).mean().item(),
+                        "PSNR": torch.tensor(psnrs).mean().item(),
+                        "LPIPS": torch.tensor(lpipss).mean().item(),
+                    }
+                )
+                per_view_dict[scene_dir][method].update(
+                    {
+                        "SSIM": {name: ssim for ssim, name in zip(torch.tensor(ssims).tolist(), image_names)},
+                        "PSNR": {name: psnr for psnr, name in zip(torch.tensor(psnrs).tolist(), image_names)},
+                        "LPIPS": {name: lp for lp, name in zip(torch.tensor(lpipss).tolist(), image_names)},
+                    }
+                )
 
-            with open(scene_dir + "/results.json", 'w') as fp:
+            with open(scene_dir + "/results.json", "w") as fp:
                 json.dump(full_dict[scene_dir], fp, indent=True)
-            with open(scene_dir + "/per_view.json", 'w') as fp:
+            with open(scene_dir + "/per_view.json", "w") as fp:
                 json.dump(per_view_dict[scene_dir], fp, indent=True)
         except:
             print("Unable to compute metrics for model", scene_dir)
+
 
 if __name__ == "__main__":
     device = torch.device("cuda:0")
@@ -114,6 +127,6 @@ if __name__ == "__main__":
 
     # Set up command line argument parser
     parser = ArgumentParser(description="Training script parameters")
-    parser.add_argument('--model_paths', '-m', required=True, nargs="+", type=str, default=[])
+    parser.add_argument("--model_paths", "-m", required=True, nargs="+", type=str, default=[])
     args = parser.parse_args()
     evaluate(args.model_paths)

@@ -1,6 +1,3 @@
-#!/bin/bash
-
-
 conda create -n feature_splatting python=3.7.13
 conda activate feature_splatting
 

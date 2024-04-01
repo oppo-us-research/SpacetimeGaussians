@@ -10,7 +10,7 @@ var searchData=
   ['orientate4',['orientate4',['../a00319.html#ga4a044653f71a4ecec68e0b623382b48a',1,'glm']]],
   ['orientation',['orientation',['../a00356.html#ga1a32fceb71962e6160e8af295c91930a',1,'glm']]],
   ['orientedangle',['orientedAngle',['../a00367.html#ga9556a803dce87fe0f42fdabe4ebba1d5',1,'glm::orientedAngle(vec&lt; 2, T, Q &gt; const &amp;x, vec&lt; 2, T, Q &gt; const &amp;y)'],['../a00367.html#ga706fce3d111f485839756a64f5a48553',1,'glm::orientedAngle(vec&lt; 3, T, Q &gt; const &amp;x, vec&lt; 3, T, Q &gt; const &amp;y, vec&lt; 3, T, Q &gt; const &amp;ref)']]],
-  ['ortho',['ortho',['../a00243.html#gae5b6b40ed882cd56cd7cb97701909c06',1,'glm::ortho(T left, T right, T bottom, T top)'],['../a00243.html#ga6615d8a9d39432e279c4575313ecb456',1,'glm::ortho(T left, T right, T bottom, T top, T zNear, T zFar)']]],
+  ['ortho',['ortho',['../a00243.html#gae5b6b40ed882cd56cd7cb97701909c06',1,'glm::ortho(T left, T right, T bottom, T top)'],['../a00243.html#ga6615d8a9d39432e279c4575313ecb456',1,'glm::ortho(T left, T right, T bottom, T top, T z_near, T z_far)']]],
   ['ortholh',['orthoLH',['../a00243.html#gad122a79aadaa5529cec4ac197203db7f',1,'glm']]],
   ['ortholh_5fno',['orthoLH_NO',['../a00243.html#ga526416735ea7c5c5cd255bf99d051bd8',1,'glm']]],
   ['ortholh_5fzo',['orthoLH_ZO',['../a00243.html#gab37ac3eec8d61f22fceda7775e836afa',1,'glm']]],

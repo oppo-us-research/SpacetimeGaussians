@@ -53,8 +53,8 @@ uint32_t getHigherMsb(uint32_t n)
 // Mark all Gaussians that pass it.
 __global__ void checkFrustum(int P,
 	const float* orig_points,
-	const float* viewmatrix,
-	const float* projmatrix,
+	const float* view_matrix,
+	const float* proj_matrix,
 	bool* present)
 {
 	auto idx = cg::this_grid().thread_rank();
@@ -62,7 +62,7 @@ __global__ void checkFrustum(int P,
 		return;
 
 	float3 p_view;
-	present[idx] = in_frustum(idx, orig_points, viewmatrix, projmatrix, false, p_view);
+	present[idx] = in_frustum(idx, orig_points, view_matrix, proj_matrix, false, p_view);
 }
 
 // Generates one key/value pair for all Gaussian / tile overlaps. 
@@ -141,14 +141,14 @@ __global__ void identifyTileRanges(int L, uint64_t* point_list_keys, uint2* rang
 void CudaRasterizer::Rasterizer::markVisible(
 	int P,
 	float* means3D,
-	float* viewmatrix,
-	float* projmatrix,
+	float* view_matrix,
+	float* proj_matrix,
 	bool* present)
 {
 	checkFrustum << <(P + 255) / 256, 256 >> > (
 		P,
 		means3D,
-		viewmatrix, projmatrix,
+		view_matrix, proj_matrix,
 		present);
 }
 
@@ -200,8 +200,8 @@ CudaRasterizer::BinningState CudaRasterizer::BinningState::fromChunk(char*& chun
 		// imgFunc,
 	    // P, degree, M,
 		// timestamp,
-		// trbfcenter.contiguous().data<float>(),
-		// trbfscale.contiguous().data<float>(),
+		// trbf_center.contiguous().data<float>(),
+		// trbf_scale.contiguous().data<float>(),
 		// motion.contiguous().data<float>(),
 		// means3D.contiguous().data<float>(),
 		// opacities.contiguous().data<float>(), 
@@ -215,11 +215,11 @@ CudaRasterizer::BinningState CudaRasterizer::BinningState::fromChunk(char*& chun
 		// scale_modifier,
 		// rotations.contiguous().data_ptr<float>(),
 		// cov3D_precomp.contiguous().data<float>(), 
-		// viewmatrix.contiguous().data<float>(), 
-		// projmatrix.contiguous().data<float>(),
+		// view_matrix.contiguous().data<float>(), 
+		// proj_matrix.contiguous().data<float>(),
 		// campos.contiguous().data<float>(),
-		// tan_fovx,
-		// tan_fovy,
+		// tan_fov_x,
+		// tan_fov_y,
 		// prefiltered,
 		// out_color.contiguous().data<float>(),
 		// radii.contiguous().data<int>(),
@@ -232,8 +232,8 @@ int CudaRasterizer::Rasterizer::forward(
 	std::function<char* (size_t)> imageBuffer,
 	const int P, int D, int M,
 	const float timestamp,
-	const float* trbfcenter,
-	const float* trbfscale,
+	const float* trbf_center,
+	const float* trbf_scale,
 	const float* motion,
 	const float* means3D,
 	float* means3Ddummy,
@@ -247,17 +247,17 @@ int CudaRasterizer::Rasterizer::forward(
 	const float scale_modifier,
 	const float* rotations,
 	const float* cov3D_precomp,
-	const float* viewmatrix,
-	const float* projmatrix,
+	const float* view_matrix,
+	const float* proj_matrix,
 	const float* cam_pos,
-	const float tan_fovx, float tan_fovy,
+	const float tan_fov_x, float tan_fov_y,
 	const bool prefiltered,
 	float* out_color,
 	int* radii,
 	bool debug)
 {
-	const float focal_y = height / (2.0f * tan_fovy);
-	const float focal_x = width / (2.0f * tan_fovx);
+	const float focal_y = height / (2.0f * tan_fov_y);
+	const float focal_x = width / (2.0f * tan_fov_x);
 
 	size_t chunk_size = required<GeometryState>(P);
 	char* chunkptr = geometryBuffer(chunk_size);
@@ -286,8 +286,8 @@ int CudaRasterizer::Rasterizer::forward(
 	CHECK_CUDA(FORWARD::prepreprocess(
 		P,
 		timestamp,
-		trbfcenter,
-		trbfscale,
+		trbf_center,
+		trbf_scale,
 		motion,
 		means3D,
 		means3Ddummy,
@@ -308,11 +308,11 @@ int CudaRasterizer::Rasterizer::forward(
 		geomState.clamped,
 		cov3D_precomp,
 		colors_precomp,
-		viewmatrix, projmatrix,
+		view_matrix, proj_matrix,
 		(glm::vec3*)cam_pos,
 		width, height,
 		focal_x, focal_y,
-		tan_fovx, tan_fovy,
+		tan_fov_x, tan_fov_y,
 		radii,
 		geomState.means2D,
 		geomState.depths,
@@ -401,10 +401,10 @@ void CudaRasterizer::Rasterizer::backward(
 	const float scale_modifier,
 	const float* rotations,
 	const float* cov3D_precomp,
-	const float* viewmatrix,
-	const float* projmatrix,
+	const float* view_matrix,
+	const float* proj_matrix,
 	const float* campos,
-	const float tan_fovx, float tan_fovy,
+	const float tan_fov_x, float tan_fov_y,
 	const int* radii,
 	char* geom_buffer,
 	char* binning_buffer,
@@ -430,8 +430,8 @@ void CudaRasterizer::Rasterizer::backward(
 		radii = geomState.internal_radii;
 	}
 
-	const float focal_y = height / (2.0f * tan_fovy);
-	const float focal_x = width / (2.0f * tan_fovx);
+	const float focal_y = height / (2.0f * tan_fov_y);
+	const float focal_x = width / (2.0f * tan_fov_x);
 
 	const dim3 tile_grid((width + BLOCK_X - 1) / BLOCK_X, (height + BLOCK_Y - 1) / BLOCK_Y, 1);
 	const dim3 block(BLOCK_X, BLOCK_Y, 1);
@@ -471,10 +471,10 @@ void CudaRasterizer::Rasterizer::backward(
 		(glm::vec4*)rotations,
 		scale_modifier,
 		cov3D_ptr,
-		viewmatrix,
-		projmatrix,
+		view_matrix,
+		proj_matrix,
 		focal_x, focal_y,
-		tan_fovx, tan_fovy,
+		tan_fov_x, tan_fov_y,
 		(glm::vec3*)campos,
 		(float3*)dL_dmean2D,
 		dL_dconic,

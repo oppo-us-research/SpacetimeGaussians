@@ -266,9 +266,9 @@ python full_eval.py -m <directory with evaluation images>/garden ... --skip_trai
   Directory to put renderings and results in, ```./eval``` by default, set to pre-trained model location if evaluating them.
   #### --mipnerf360 / -m360
   Path to MipNeRF360 source datasets, required if training or rendering.
-  #### --tanksandtemples / -tat
+  #### --tanks_and_temples / -tat
   Path to Tanks&Temples source datasets, required if training or rendering.
-  #### --deepblending / -db
+  #### --deep_blending / -db
   Path to Deep Blending source datasets, required if training or rendering.
 </details>
 <br>

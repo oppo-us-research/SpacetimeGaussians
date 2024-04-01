@@ -3,7 +3,7 @@
  * GRAPHDECO research group, https://team.inria.fr/graphdeco
  * All rights reserved.
  *
- * This software is free for non-commercial, research and evaluation use 
+ * This software is free for non-commercial, research and evaluation use
  * under the terms of the LICENSE.md file.
  *
  * For inquiries contact  george.drettakis@inria.fr
@@ -51,28 +51,28 @@ __host__ __device__ uint32_t prepMorton(uint32_t x)
 	return x;
 }
 
-__host__ __device__ uint32_t coord2Morton(float3 coord, float3 minn, float3 maxx)
+__host__ __device__ uint32_t coord2Morton(float3 coord, float3 minn, float3 max_x)
 {
-	uint32_t x = prepMorton(((coord.x - minn.x) / (maxx.x - minn.x)) * ((1 << 10) - 1));
-	uint32_t y = prepMorton(((coord.y - minn.y) / (maxx.y - minn.y)) * ((1 << 10) - 1));
-	uint32_t z = prepMorton(((coord.z - minn.z) / (maxx.z - minn.z)) * ((1 << 10) - 1));
+	uint32_t x = prepMorton(((coord.x - minn.x) / (max_x.x - minn.x)) * ((1 << 10) - 1));
+	uint32_t y = prepMorton(((coord.y - minn.y) / (max_x.y - minn.y)) * ((1 << 10) - 1));
+	uint32_t z = prepMorton(((coord.z - minn.z) / (max_x.z - minn.z)) * ((1 << 10) - 1));
 
 	return x | (y << 1) | (z << 2);
 }
 
-__global__ void coord2Morton(int P, const float3* points, float3 minn, float3 maxx, uint32_t* codes)
+__global__ void coord2Morton(int P, const float3* points, float3 minn, float3 max_x, uint32_t* codes)
 {
 	auto idx = cg::this_grid().thread_rank();
 	if (idx >= P)
 		return;
 
-	codes[idx] = coord2Morton(points[idx], minn, maxx);
+	codes[idx] = coord2Morton(points[idx], minn, max_x);
 }
 
 struct MinMax
 {
 	float3 minn;
-	float3 maxx;
+	float3 max_x;
 };
 
 __global__ void boxMinMax(uint32_t P, float3* points, uint32_t* indices, MinMax* boxes)
@@ -83,12 +83,12 @@ __global__ void boxMinMax(uint32_t P, float3* points, uint32_t* indices, MinMax*
 	if (idx < P)
 	{
 		me.minn = points[indices[idx]];
-		me.maxx = points[indices[idx]];
+		me.max_x = points[indices[idx]];
 	}
 	else
 	{
 		me.minn = { FLT_MAX, FLT_MAX, FLT_MAX };
-		me.maxx = { -FLT_MAX,-FLT_MAX,-FLT_MAX };
+		me.max_x = { -FLT_MAX,-FLT_MAX,-FLT_MAX };
 	}
 
 	__shared__ MinMax redResult[BOX_SIZE];
@@ -105,9 +105,9 @@ __global__ void boxMinMax(uint32_t P, float3* points, uint32_t* indices, MinMax*
 			me.minn.x = min(me.minn.x, other.minn.x);
 			me.minn.y = min(me.minn.y, other.minn.y);
 			me.minn.z = min(me.minn.z, other.minn.z);
-			me.maxx.x = max(me.maxx.x, other.maxx.x);
-			me.maxx.y = max(me.maxx.y, other.maxx.y);
-			me.maxx.z = max(me.maxx.z, other.maxx.z);
+			me.max_x.x = max(me.max_x.x, other.max_x.x);
+			me.max_x.y = max(me.max_x.y, other.max_x.y);
+			me.max_x.z = max(me.max_x.z, other.max_x.z);
 		}
 		__syncthreads();
 	}
@@ -119,12 +119,12 @@ __global__ void boxMinMax(uint32_t P, float3* points, uint32_t* indices, MinMax*
 __device__ __host__ float distBoxPoint(const MinMax& box, const float3& p)
 {
 	float3 diff = { 0, 0, 0 };
-	if (p.x < box.minn.x || p.x > box.maxx.x)
-		diff.x = min(abs(p.x - box.minn.x), abs(p.x - box.maxx.x));
-	if (p.y < box.minn.y || p.y > box.maxx.y)
-		diff.y = min(abs(p.y - box.minn.y), abs(p.y - box.maxx.y));
-	if (p.z < box.minn.z || p.z > box.maxx.z)
-		diff.z = min(abs(p.z - box.minn.z), abs(p.z - box.maxx.z));
+	if (p.x < box.minn.x || p.x > box.max_x.x)
+		diff.x = min(abs(p.x - box.minn.x), abs(p.x - box.max_x.x));
+	if (p.y < box.minn.y || p.y > box.max_x.y)
+		diff.y = min(abs(p.y - box.minn.y), abs(p.y - box.max_x.y));
+	if (p.z < box.minn.z || p.z > box.max_x.z)
+		diff.z = min(abs(p.z - box.minn.z), abs(p.z - box.max_x.z));
 	return diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
 }
 
@@ -188,7 +188,7 @@ void SimpleKNN::knn(int P, float3* points, float* meanDists)
 	cudaMalloc(&result, sizeof(float3));
 	size_t temp_storage_bytes;
 
-	float3 init = { 0, 0, 0 }, minn, maxx;
+	float3 init = { 0, 0, 0 }, minn, max_x;
 
 	cub::DeviceReduce::Reduce(nullptr, temp_storage_bytes, points, result, P, CustomMin(), init);
 	thrust::device_vector<char> temp_storage(temp_storage_bytes);
@@ -197,11 +197,11 @@ void SimpleKNN::knn(int P, float3* points, float* meanDists)
 	cudaMemcpy(&minn, result, sizeof(float3), cudaMemcpyDeviceToHost);
 
 	cub::DeviceReduce::Reduce(temp_storage.data().get(), temp_storage_bytes, points, result, P, CustomMax(), init);
-	cudaMemcpy(&maxx, result, sizeof(float3), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&max_x, result, sizeof(float3), cudaMemcpyDeviceToHost);
 
 	thrust::device_vector<uint32_t> morton(P);
 	thrust::device_vector<uint32_t> morton_sorted(P);
-	coord2Morton << <(P + 255) / 256, 256 >> > (P, points, minn, maxx, morton.data().get());
+	coord2Morton << <(P + 255) / 256, 256 >> > (P, points, minn, max_x, morton.data().get());
 
 	thrust::device_vector<uint32_t> indices(P);
 	thrust::sequence(indices.begin(), indices.end());

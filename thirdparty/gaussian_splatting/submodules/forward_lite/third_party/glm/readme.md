@@ -504,7 +504,7 @@ glm::mat4 camera(float Translate, glm::vec2 const& Rotate)
 - Fixed (u)int64 MSB/LSB handling on BE archs #306
 - Fixed multi-line comment warning in g++. #315
 - Fixed specifier removal by 'std::make_pair<>' #333
-- Fixed perspective fovy argument documentation #327
+- Fixed perspective fov_y argument documentation #327
 - Removed -m64 causing build issues on Linux 32 #331
 - Fixed isfinite with C++98 compilers #343
 - Fixed Intel compiler build error on Linux #354
@@ -528,7 +528,7 @@ glm::mat4 camera(float Translate, glm::vec2 const& Rotate)
 - Added ARM instruction set detection
 
 #### Improvements:
-- Removed assert for perspective with zFar < zNear #298
+- Removed assert for perspective with z_far < z_near #298
 - Added Visual Studio natvis support for vec1, quat and dualqual types
 - Cleaned up C++11 feature detections
 - Clarify GLM licensing
@@ -708,7 +708,7 @@ glm::mat4 camera(float Translate, glm::vec2 const& Rotate)
 - Fixed GTX_multiple for negative value
 - Removed GTX_ocl_type extension
 - Fixed post increment and decrement operators
-- Fixed perspective with zNear == 0 (#71)
+- Fixed perspective with z_near == 0 (#71)
 - Removed l-value swizzle operators
 - Cleaned up compiler detection code for unsupported compilers
 - Replaced C cast by C++ casts
@@ -767,7 +767,7 @@ glm::mat4 camera(float Translate, glm::vec2 const& Rotate)
 - Fixed CUDA warnings #86
 - Fixed GLM natvis for VC11 #82
 - Fixed GLM_GTX_multiple with negative values #79
-- Fixed glm::perspective when zNear is zero #71
+- Fixed glm::perspective when z_near is zero #71
 
 ---
 ### GLM 0.9.4.3 - 2013-03-20

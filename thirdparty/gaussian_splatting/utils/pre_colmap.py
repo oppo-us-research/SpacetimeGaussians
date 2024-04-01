@@ -1,7 +1,8 @@
-
-import sys
 import sqlite3
+import sys
+
 import numpy as np
+
 
 # https://github.com/colmap/colmap/blob/dev/scripts/python/database.py
 IS_PYTHON3 = sys.version_info[0] >= 3
@@ -36,7 +37,9 @@ CREATE_IMAGES_TABLE = """CREATE TABLE IF NOT EXISTS images (
     prior_tz REAL,
     CONSTRAINT image_id_check CHECK(image_id >= 0 and image_id < {}),
     FOREIGN KEY(camera_id) REFERENCES cameras(camera_id))
-""".format(MAX_IMAGE_ID)
+""".format(
+    MAX_IMAGE_ID
+)
 
 CREATE_TWO_VIEW_GEOMETRIES_TABLE = """
 CREATE TABLE IF NOT EXISTS two_view_geometries (
@@ -66,18 +69,19 @@ CREATE_MATCHES_TABLE = """CREATE TABLE IF NOT EXISTS matches (
     cols INTEGER NOT NULL,
     data BLOB)"""
 
-CREATE_NAME_INDEX = \
-    "CREATE UNIQUE INDEX IF NOT EXISTS index_name ON images(name)"
+CREATE_NAME_INDEX = "CREATE UNIQUE INDEX IF NOT EXISTS index_name ON images(name)"
 
-CREATE_ALL = "; ".join([
-    CREATE_CAMERAS_TABLE,
-    CREATE_IMAGES_TABLE,
-    CREATE_KEYPOINTS_TABLE,
-    CREATE_DESCRIPTORS_TABLE,
-    CREATE_MATCHES_TABLE,
-    CREATE_TWO_VIEW_GEOMETRIES_TABLE,
-    CREATE_NAME_INDEX
-])
+CREATE_ALL = "; ".join(
+    [
+        CREATE_CAMERAS_TABLE,
+        CREATE_IMAGES_TABLE,
+        CREATE_KEYPOINTS_TABLE,
+        CREATE_DESCRIPTORS_TABLE,
+        CREATE_MATCHES_TABLE,
+        CREATE_TWO_VIEW_GEOMETRIES_TABLE,
+        CREATE_NAME_INDEX,
+    ]
+)
 
 
 def image_ids_to_pair_id(image_id1, image_id2):
@@ -112,79 +116,88 @@ class COLMAPDatabase(sqlite3.Connection):
     def connect(database_path):
         return sqlite3.connect(database_path, factory=COLMAPDatabase)
 
-
     def __init__(self, *args, **kwargs):
         super(COLMAPDatabase, self).__init__(*args, **kwargs)
 
         self.create_tables = lambda: self.executescript(CREATE_ALL)
-        self.create_cameras_table = \
-            lambda: self.executescript(CREATE_CAMERAS_TABLE)
-        self.create_descriptors_table = \
-            lambda: self.executescript(CREATE_DESCRIPTORS_TABLE)
-        self.create_images_table = \
-            lambda: self.executescript(CREATE_IMAGES_TABLE)
-        self.create_two_view_geometries_table = \
-            lambda: self.executescript(CREATE_TWO_VIEW_GEOMETRIES_TABLE)
-        self.create_keypoints_table = \
-            lambda: self.executescript(CREATE_KEYPOINTS_TABLE)
-        self.create_matches_table = \
-            lambda: self.executescript(CREATE_MATCHES_TABLE)
+        self.create_cameras_table = lambda: self.executescript(CREATE_CAMERAS_TABLE)
+        self.create_descriptors_table = lambda: self.executescript(CREATE_DESCRIPTORS_TABLE)
+        self.create_images_table = lambda: self.executescript(CREATE_IMAGES_TABLE)
+        self.create_two_view_geometries_table = lambda: self.executescript(CREATE_TWO_VIEW_GEOMETRIES_TABLE)
+        self.create_keypoints_table = lambda: self.executescript(CREATE_KEYPOINTS_TABLE)
+        self.create_matches_table = lambda: self.executescript(CREATE_MATCHES_TABLE)
         self.create_name_index = lambda: self.executescript(CREATE_NAME_INDEX)
 
-    def add_camera(self, model, width, height, params,
-                   prior_focal_length=False, camera_id=None):
+    def add_camera(self, model, width, height, params, prior_focal_length=False, camera_id=None):
         params = np.asarray(params, np.float64)
         cursor = self.execute(
             "INSERT INTO cameras VALUES (?, ?, ?, ?, ?, ?)",
-            (camera_id, model, width, height, array_to_blob(params),
-             prior_focal_length))
+            (camera_id, model, width, height, array_to_blob(params), prior_focal_length),
+        )
         return cursor.lastrowid
 
-    def add_image(self, name, camera_id,
-                  prior_q=np.full(4, np.NaN), prior_t=np.full(3, np.NaN), image_id=None):
+    def add_image(self, name, camera_id, prior_q=np.full(4, np.NaN), prior_t=np.full(3, np.NaN), image_id=None):
         cursor = self.execute(
             "INSERT INTO images VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (image_id, name, camera_id, prior_q[0], prior_q[1], prior_q[2],
-             prior_q[3], prior_t[0], prior_t[1], prior_t[2]))
+            (
+                image_id,
+                name,
+                camera_id,
+                prior_q[0],
+                prior_q[1],
+                prior_q[2],
+                prior_q[3],
+                prior_t[0],
+                prior_t[1],
+                prior_t[2],
+            ),
+        )
         return cursor.lastrowid
 
     def add_keypoints(self, image_id, keypoints):
-        assert(len(keypoints.shape) == 2)
-        assert(keypoints.shape[1] in [2, 4, 6])
+        assert len(keypoints.shape) == 2
+        assert keypoints.shape[1] in [2, 4, 6]
 
         keypoints = np.asarray(keypoints, np.float32)
         self.execute(
-            "INSERT INTO keypoints VALUES (?, ?, ?, ?)",
-            (image_id,) + keypoints.shape + (array_to_blob(keypoints),))
+            "INSERT INTO keypoints VALUES (?, ?, ?, ?)", (image_id,) + keypoints.shape + (array_to_blob(keypoints),)
+        )
 
     def add_descriptors(self, image_id, descriptors):
         descriptors = np.ascontiguousarray(descriptors, np.uint8)
         self.execute(
             "INSERT INTO descriptors VALUES (?, ?, ?, ?)",
-            (image_id,) + descriptors.shape + (array_to_blob(descriptors),))
+            (image_id,) + descriptors.shape + (array_to_blob(descriptors),),
+        )
 
     def add_matches(self, image_id1, image_id2, matches):
-        assert(len(matches.shape) == 2)
-        assert(matches.shape[1] == 2)
+        assert len(matches.shape) == 2
+        assert matches.shape[1] == 2
 
         if image_id1 > image_id2:
-            matches = matches[:,::-1]
+            matches = matches[:, ::-1]
 
         pair_id = image_ids_to_pair_id(image_id1, image_id2)
         matches = np.asarray(matches, np.uint32)
-        self.execute(
-            "INSERT INTO matches VALUES (?, ?, ?, ?)",
-            (pair_id,) + matches.shape + (array_to_blob(matches),))
+        self.execute("INSERT INTO matches VALUES (?, ?, ?, ?)", (pair_id,) + matches.shape + (array_to_blob(matches),))
 
-    def add_two_view_geometry(self, image_id1, image_id2, matches,
-                              F=np.eye(3), E=np.eye(3), H=np.eye(3),
-                              qvec=np.array([1.0, 0.0, 0.0, 0.0]),
-                              tvec=np.zeros(3), config=2):
-        assert(len(matches.shape) == 2)
-        assert(matches.shape[1] == 2)
+    def add_two_view_geometry(
+        self,
+        image_id1,
+        image_id2,
+        matches,
+        F=np.eye(3),
+        E=np.eye(3),
+        H=np.eye(3),
+        qvec=np.array([1.0, 0.0, 0.0, 0.0]),
+        tvec=np.zeros(3),
+        config=2,
+    ):
+        assert len(matches.shape) == 2
+        assert matches.shape[1] == 2
 
         if image_id1 > image_id2:
-            matches = matches[:,::-1]
+            matches = matches[:, ::-1]
 
         pair_id = image_ids_to_pair_id(image_id1, image_id2)
         matches = np.asarray(matches, np.uint32)
@@ -195,15 +208,23 @@ class COLMAPDatabase(sqlite3.Connection):
         tvec = np.asarray(tvec, dtype=np.float64)
         self.execute(
             "INSERT INTO two_view_geometries VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (pair_id,) + matches.shape + (array_to_blob(matches), config,
-             array_to_blob(F), array_to_blob(E), array_to_blob(H),
-             array_to_blob(qvec), array_to_blob(tvec)))
+            (pair_id,)
+            + matches.shape
+            + (
+                array_to_blob(matches),
+                config,
+                array_to_blob(F),
+                array_to_blob(E),
+                array_to_blob(H),
+                array_to_blob(qvec),
+                array_to_blob(tvec),
+            ),
+        )
 
 
 # def example_usage(database_path):
 #     import os
 #     import argparse
-
 
 
 #     # Open the database.
@@ -258,8 +279,6 @@ class COLMAPDatabase(sqlite3.Connection):
 #     db.close()
 
 
-
-
 if __name__ == "__main__":
-    databasepath = "/nfs/STG/FvvRelight/zhanli/data/neural_3d/cut_roasted_beef/colmap_ext/database.db"
-    #example_usage(databasepath)
+    database_path = "/nfs/STG/FvvRelight/zhanli/data/neural_3d/cut_roasted_beef/colmap_ext/database.db"
+    # example_usage(database_path)

@@ -24,8 +24,8 @@ namespace CudaRasterizer
 		static void markVisible(
 			int P,
 			float* means3D,
-			float* viewmatrix,
-			float* projmatrix,
+			float* view_matrix,
+			float* proj_matrix,
 			bool* present);
 
 		static int forward(
@@ -43,10 +43,10 @@ namespace CudaRasterizer
 			const float scale_modifier,
 			const float* rotations,
 			const float* cov3D_precomp,
-			const float* viewmatrix,
-			const float* projmatrix,
+			const float* view_matrix,
+			const float* proj_matrix,
 			const float* cam_pos,
-			const float tan_fovx, float tan_fovy,
+			const float tan_fov_x, float tan_fov_y,
 			const bool prefiltered,
 			float* out_color,
 			float* out_depth,
@@ -63,10 +63,10 @@ namespace CudaRasterizer
 			const float scale_modifier,
 			const float* rotations,
 			const float* cov3D_precomp,
-			const float* viewmatrix,
-			const float* projmatrix,
+			const float* view_matrix,
+			const float* proj_matrix,
 			const float* campos,
-			const float tan_fovx, float tan_fovy,
+			const float tan_fov_x, float tan_fov_y,
 			const int* radii,
 			char* geom_buffer,
 			char* binning_buffer,

@@ -12,7 +12,7 @@ var searchData=
   ['transpose',['transpose',['../a00371.html#gae679d841da8ce9dbcc6c2d454f15bc35',1,'glm']]],
   ['trianglenormal',['triangleNormal',['../a00344.html#gaff1cb5496925dfa7962df457772a7f35',1,'glm']]],
   ['trunc',['trunc',['../a00241.html#gaf9375e3e06173271d49e6ffa3a334259',1,'glm']]],
-  ['tweakedinfiniteperspective',['tweakedInfinitePerspective',['../a00243.html#gaaeacc04a2a6f4b18c5899d37e7bb3ef9',1,'glm::tweakedInfinitePerspective(T fovy, T aspect, T near)'],['../a00243.html#gaf5b3c85ff6737030a1d2214474ffa7a8',1,'glm::tweakedInfinitePerspective(T fovy, T aspect, T near, T ep)']]],
+  ['tweakedinfiniteperspective',['tweakedInfinitePerspective',['../a00243.html#gaaeacc04a2a6f4b18c5899d37e7bb3ef9',1,'glm::tweakedInfinitePerspective(T fov_y, T aspect, T near)'],['../a00243.html#gaf5b3c85ff6737030a1d2214474ffa7a8',1,'glm::tweakedInfinitePerspective(T fov_y, T aspect, T near, T ep)']]],
   ['two_5fover_5fpi',['two_over_pi',['../a00290.html#ga74eadc8a211253079683219a3ea0462a',1,'glm']]],
   ['two_5fover_5froot_5fpi',['two_over_root_pi',['../a00290.html#ga5827301817640843cf02026a8d493894',1,'glm']]],
   ['two_5fpi',['two_pi',['../a00290.html#gaa5276a4617566abcfe49286f40e3a256',1,'glm']]],

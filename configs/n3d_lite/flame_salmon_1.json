@@ -2,9 +2,9 @@
   "resolution": 2,
   "model": "ours_lite",
   "scaling_lr": 0.003,
-  "preprocesspoints": 3,
+  "preprocess_points": 3,
   "test_iteration": 12000,
   "densify": 2,
   "duration": 50,
-  "rdpip": "train_ours_lite"
+  "rd_pipe": "train_ours_lite"
 }

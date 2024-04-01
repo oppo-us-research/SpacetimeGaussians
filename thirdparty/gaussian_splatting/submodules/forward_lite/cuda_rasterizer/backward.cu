@@ -146,7 +146,7 @@ __global__ void computeCov2DCUDA(int P,
 	const int* radii,
 	const float* cov3Ds,
 	const float h_x, float h_y,
-	const float tan_fovx, float tan_fovy,
+	const float tan_fov_x, float tan_fov_y,
 	const float* view_matrix,
 	const float* dL_dconics,
 	float3* dL_dmeans,
@@ -165,8 +165,8 @@ __global__ void computeCov2DCUDA(int P,
 	float3 dL_dconic = { dL_dconics[4 * idx], dL_dconics[4 * idx + 1], dL_dconics[4 * idx + 3] };
 	float3 t = transformPoint4x3(mean, view_matrix);
 	
-	const float limx = 1.3f * tan_fovx;
-	const float limy = 1.3f * tan_fovy;
+	const float limx = 1.3f * tan_fov_x;
+	const float limy = 1.3f * tan_fov_y;
 	const float txtz = t.x / t.z;
 	const float tytz = t.y / t.z;
 	t.x = min(limx, max(-limx, txtz)) * t.z;
@@ -369,7 +369,7 @@ __global__ void preprocessCUDA(
 
 	float3 m = means[idx];
 
-	// Taking care of gradients from the screenspace points
+	// Taking care of gradients from the screen_space points
 	float4 m_hom = transformPoint4x4(m, proj);
 	float m_w = 1.0f / (m_hom.w + 0.0000001f);
 
@@ -566,10 +566,10 @@ void BACKWARD::preprocess(
 	const glm::vec4* rotations,
 	const float scale_modifier,
 	const float* cov3Ds,
-	const float* viewmatrix,
-	const float* projmatrix,
+	const float* view_matrix,
+	const float* proj_matrix,
 	const float focal_x, float focal_y,
-	const float tan_fovx, float tan_fovy,
+	const float tan_fov_x, float tan_fov_y,
 	const glm::vec3* campos,
 	const float3* dL_dmean2D,
 	const float* dL_dconic,
@@ -591,9 +591,9 @@ void BACKWARD::preprocess(
 		cov3Ds,
 		focal_x,
 		focal_y,
-		tan_fovx,
-		tan_fovy,
-		viewmatrix,
+		tan_fov_x,
+		tan_fov_y,
+		view_matrix,
 		dL_dconic,
 		(float3*)dL_dmean3D,
 		dL_dcov3D);
@@ -610,7 +610,7 @@ void BACKWARD::preprocess(
 		(glm::vec3*)scales,
 		(glm::vec4*)rotations,
 		scale_modifier,
-		projmatrix,
+		proj_matrix,
 		campos,
 		(float3*)dL_dmean2D,
 		(glm::vec3*)dL_dmean3D,

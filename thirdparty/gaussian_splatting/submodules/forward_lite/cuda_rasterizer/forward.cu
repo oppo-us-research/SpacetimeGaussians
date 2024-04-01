@@ -71,16 +71,16 @@ __device__ glm::vec3 computeColorFromSH(int idx, int deg, int max_coeffs, const 
 }
 
 // Forward version of 2D covariance matrix computation
-__device__ float3 computeCov2D(const float3& mean, float focal_x, float focal_y, float tan_fovx, float tan_fovy, const float* cov3D, const float* viewmatrix)
+__device__ float3 computeCov2D(const float3& mean, float focal_x, float focal_y, float tan_fov_x, float tan_fov_y, const float* cov3D, const float* view_matrix)
 {
 	// The following models the steps outlined by equations 29
 	// and 31 in "EWA Splatting" (Zwicker et al., 2002). 
 	// Additionally considers aspect / scaling of viewport.
 	// Transposes used to account for row-/column-major conventions.
-	float3 t = transformPoint4x3(mean, viewmatrix);
+	float3 t = transformPoint4x3(mean, view_matrix);
 
-	const float limx = 1.3f * tan_fovx;
-	const float limy = 1.3f * tan_fovy;
+	const float limx = 1.3f * tan_fov_x;
+	const float limy = 1.3f * tan_fov_y;
 	const float txtz = t.x / t.z;
 	const float tytz = t.y / t.z;
 	t.x = min(limx, max(-limx, txtz)) * t.z;
@@ -92,9 +92,9 @@ __device__ float3 computeCov2D(const float3& mean, float focal_x, float focal_y,
 		0, 0, 0);
 
 	glm::mat3 W = glm::mat3(
-		viewmatrix[0], viewmatrix[4], viewmatrix[8],
-		viewmatrix[1], viewmatrix[5], viewmatrix[9],
-		viewmatrix[2], viewmatrix[6], viewmatrix[10]);
+		view_matrix[0], view_matrix[4], view_matrix[8],
+		view_matrix[1], view_matrix[5], view_matrix[9],
+		view_matrix[2], view_matrix[6], view_matrix[10]);
 
 	glm::mat3 T = W * J;
 
@@ -156,8 +156,8 @@ __device__ void computeCov3D(const glm::vec3 scale, float mod, const glm::vec4 r
 	// prepreprocessCUDA<NUM_CHANNELS> << <(P + 255) / 256, 256 >> > (
 	// P,
 	// timestamp,
-	// trbfcenter,
-	// trbfscale,
+	// trbf_center,
+	// trbf_scale,
 	// motion,
 	// orig_points,
 	// orig_pointsdummy,
@@ -169,8 +169,8 @@ template<int C>
 __global__ void prepreprocessCUDA(
 	int P, 
 	const float timestamp,
-	const float* trbfcenter,
-	const float* trbfscale,
+	const float* trbf_center,
+	const float* trbf_scale,
 	const float* motion,
 	const float* orig_points,
 	float* orig_pointsdummy,
@@ -183,25 +183,25 @@ __global__ void prepreprocessCUDA(
 
 	// Initialize radius and touched tiles to 0. If this isn't changed,
 	// this Gaussian will not be processed further.
-	float trbfdistance = timestamp - trbfcenter[idx];
-	float trbfdistance2 = trbfdistance * trbfdistance;
-	float trbfdistance3 = trbfdistance2 * trbfdistance;
+	float trbf_distance = timestamp - trbf_center[idx];
+	float trbf_distance2 = trbf_distance * trbf_distance;
+	float trbf_distance3 = trbf_distance2 * trbf_distance;
 	
-	// orig_pointsdummy[3 * idx] = orig_points[3 * idx] ;//+ trbfdistance * motion[9 * idx] +  trbfdistance2 * motion[9 * idx + 3]  +  trbfdistance3 * motion[9 * idx + 6];      
-	// orig_pointsdummy[3 * idx + 1] = orig_points[3 * idx + 1] ; //+ trbfdistance * motion[9 * idx + 1] +  trbfdistance2 * motion[9 * idx + 4]  +  trbfdistance3 * motion[9 * idx + 7];      
-	// orig_pointsdummy[3 * idx + 2 ] = orig_points[3 * idx + 2] ; //+  trbfdistance * motion[9 * idx + 2] + trbfdistance2 * motion[9 * idx + 5]  +  trbfdistance3 * motion[9 * idx + 8];      
+	// orig_pointsdummy[3 * idx] = orig_points[3 * idx] ;//+ trbf_distance * motion[9 * idx] +  trbf_distance2 * motion[9 * idx + 3]  +  trbf_distance3 * motion[9 * idx + 6];      
+	// orig_pointsdummy[3 * idx + 1] = orig_points[3 * idx + 1] ; //+ trbf_distance * motion[9 * idx + 1] +  trbf_distance2 * motion[9 * idx + 4]  +  trbf_distance3 * motion[9 * idx + 7];      
+	// orig_pointsdummy[3 * idx + 2 ] = orig_points[3 * idx + 2] ; //+  trbf_distance * motion[9 * idx + 2] + trbf_distance2 * motion[9 * idx + 5]  +  trbf_distance3 * motion[9 * idx + 8];      
 	
 
 		
-	orig_pointsdummy[3 * idx] = orig_points[3 * idx]  + trbfdistance * motion[9 * idx] +  trbfdistance2 * motion[9 * idx + 3]  +  trbfdistance3 * motion[9 * idx + 6];      
-	orig_pointsdummy[3 * idx + 1] = orig_points[3 * idx + 1] + trbfdistance * motion[9 * idx + 1] +  trbfdistance2 * motion[9 * idx + 4]  +  trbfdistance3 * motion[9 * idx + 7];      
-	orig_pointsdummy[3 * idx + 2 ] = orig_points[3 * idx + 2] +  trbfdistance * motion[9 * idx + 2] + trbfdistance2 * motion[9 * idx + 5]  +  trbfdistance3 * motion[9 * idx + 8];      
+	orig_pointsdummy[3 * idx] = orig_points[3 * idx]  + trbf_distance * motion[9 * idx] +  trbf_distance2 * motion[9 * idx + 3]  +  trbf_distance3 * motion[9 * idx + 6];      
+	orig_pointsdummy[3 * idx + 1] = orig_points[3 * idx + 1] + trbf_distance * motion[9 * idx + 1] +  trbf_distance2 * motion[9 * idx + 4]  +  trbf_distance3 * motion[9 * idx + 7];      
+	orig_pointsdummy[3 * idx + 2 ] = orig_points[3 * idx + 2] +  trbf_distance * motion[9 * idx + 2] + trbf_distance2 * motion[9 * idx + 5]  +  trbf_distance3 * motion[9 * idx + 8];      
 	
 
 
-	trbfdistance = trbfdistance / trbfscale[idx]; 
-	trbfdistance = exp(-1 * trbfdistance * trbfdistance);
-	oppacitiesdummy[idx] = opacities[idx] * trbfdistance;
+	trbf_distance = trbf_distance / trbf_scale[idx]; 
+	trbf_distance = exp(-1 * trbf_distance * trbf_distance);
+	oppacitiesdummy[idx] = opacities[idx] * trbf_distance;
 }
 
 // template<int C>
@@ -238,11 +238,11 @@ __global__ void preprocessCUDA(
 	bool* clamped,
 	const float* cov3D_precomp,
 	const float* colors_precomp,
-	const float* viewmatrix,
-	const float* projmatrix,
+	const float* view_matrix,
+	const float* proj_matrix,
 	const glm::vec3* cam_pos,
 	const int W, int H,
-	const float tan_fovx, float tan_fovy,
+	const float tan_fov_x, float tan_fov_y,
 	const float focal_x, float focal_y,
 	int* radii,
 	float2* points_xy_image,
@@ -265,12 +265,12 @@ __global__ void preprocessCUDA(
 
 	// Perform near culling, quit if outside.
 	float3 p_view;
-	if (!in_frustum(idx, orig_points, viewmatrix, projmatrix, prefiltered, p_view))
+	if (!in_frustum(idx, orig_points, view_matrix, proj_matrix, prefiltered, p_view))
 		return;
 
 	// Transform point by projecting
 	float3 p_orig = { orig_points[3 * idx], orig_points[3 * idx + 1], orig_points[3 * idx + 2] };
-	float4 p_hom = transformPoint4x4(p_orig, projmatrix);
+	float4 p_hom = transformPoint4x4(p_orig, proj_matrix);
 	float p_w = 1.0f / (p_hom.w + 0.0000001f);
 	float3 p_proj = { p_hom.x * p_w, p_hom.y * p_w, p_hom.z * p_w };
 
@@ -288,7 +288,7 @@ __global__ void preprocessCUDA(
 	}
 
 	// Compute 2D screen-space covariance matrix
-	float3 cov = computeCov2D(p_orig, focal_x, focal_y, tan_fovx, tan_fovy, cov3D, viewmatrix);
+	float3 cov = computeCov2D(p_orig, focal_x, focal_y, tan_fov_x, tan_fov_y, cov3D, view_matrix);
 
 	// Invert covariance (EWA algorithm)
 	float det = (cov.x * cov.z - cov.y * cov.y);
@@ -477,8 +477,8 @@ void FORWARD::render(
 void FORWARD::prepreprocess(		
 	int P,
 	const float timestamp,
-	const float* trbfcenter,
-	const float* trbfscale,
+	const float* trbf_center,
+	const float* trbf_scale,
 	const float* motion,
 	const float* orig_points,
 	float* orig_pointsdummy,
@@ -489,8 +489,8 @@ void FORWARD::prepreprocess(
 	prepreprocessCUDA<NUM_CHANNELS> << <(P + 255) / 256, 256 >> > (
 		P,
 		timestamp,
-		trbfcenter,
-		trbfscale,
+		trbf_center,
+		trbf_scale,
 		motion,
 		orig_points,
 		orig_pointsdummy,
@@ -514,12 +514,12 @@ void FORWARD::preprocess(
 	bool* clamped,
 	const float* cov3D_precomp,
 	const float* colors_precomp,
-	const float* viewmatrix,
-	const float* projmatrix,
+	const float* view_matrix,
+	const float* proj_matrix,
 	const glm::vec3* cam_pos,
 	const int W, int H,
 	const float focal_x, float focal_y,
-	const float tan_fovx, float tan_fovy,
+	const float tan_fov_x, float tan_fov_y,
 	int* radii,
 	float2* means2D,
 	float* depths,
@@ -541,11 +541,11 @@ void FORWARD::preprocess(
 		clamped,
 		cov3D_precomp,
 		colors_precomp,
-		viewmatrix, 
-		projmatrix,
+		view_matrix, 
+		proj_matrix,
 		cam_pos,
 		W, H,
-		tan_fovx, tan_fovy,
+		tan_fov_x, tan_fov_y,
 		focal_x, focal_y,
 		radii,
 		means2D,

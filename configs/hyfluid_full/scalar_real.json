@@ -1,11 +1,10 @@
 {
   "resolution": 2,
   "model": "ours_full",
-  "scaling_lr": 0.003,
+  "scaling_lr": 0.0015,
   "preprocess_points": 0,
   "test_iteration": 12000,
-  "densify": 2,
-  "duration": 50,
+  "duration": 1,
   "rd_pipe": "train_ours_full",
   "rgb_function": "sandwich"
 }
