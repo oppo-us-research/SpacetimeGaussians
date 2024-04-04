@@ -57,9 +57,9 @@ conda activate feature_splatting
 ## Command to build real-time demo (optianal, Windows only, inference only, we provide the pre-built demo)
 # ```
 # cd thirdparty
-# git clone https://gitlab.inria.fr/sibr/sibr_core.git
-# cd sibr_core
-# git checkout 4ae964a # we opt to use this latetest version updated by 3DGs instead of the old version we used in paper. 
+# git clone https://github.com/graphdeco-inria/gaussian-splatting --recursive
+# cd gaussian-splatting
+# cd SIBR_viewers
 # cmake -Bbuild .
 # ```
 # after ```cmake -Bbuild .```, it will automaticly donwload third party libraries provided by Inria (takes several minutes for the first time). </br>
