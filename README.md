@@ -234,7 +234,9 @@ The above command has beed tested on Nvidia RTX 3050 Laptop GPU + Windows 10.
 ``` 
 8K rendering has been tested on Nvidia RTX 4090 + Windows 11. 
 
-
+### Third Party Implemented Web Viewer 
+We thank Kevin Kwok (Antimatter15) for the amazing web viewer of our method: splaTV . The web viewer is released at [github](https://github.com/antimatter15/splaTV).
+You can view one of our scene from the [web viewer](http://antimatter15.com/splaTV/).
 ## Create Your New Representations and Rendering Pipeline
 If you want to customize our codebase for your own models, you can refer to the following steps </br>
 - Step 1: Create a new Gaussian representation in this [folder](./thirdparty/gaussian_splatting/scene/). You can use ```oursfull.py``` or ```ourslite.py``` as a template. </br>
@@ -256,6 +258,11 @@ Some parts of our code referenced the following repos:
 [SIBR](https://gitlab.inria.fr/sibr/sibr_core.git), 
 [fisheye-distortion](https://github.com/Synthesis-AI-Dev/fisheye-distortion).
 
+We sincerely thank the anonymous reviewers of CVPR2024 for their helpful feedbacks. 
+
+
+we also thank Michael Rubloff for his post on [radiancefields](https://radiancefields.com/splatv-dynamic-gaussian-splatting-viewer/). 
+We also want to thank MrNeRF for [posts](https://x.com/janusch_patas/status/1740621964480217113?s=20) about our paper and other Guassian Splatting based papers. 
 
 
 ## Citations
