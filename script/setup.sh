@@ -58,14 +58,14 @@ conda activate feature_splatting
 # ```
 # cd thirdparty
 # git clone https://gitlab.inria.fr/sibr/sibr_core.git
-# git checkout 4ae964a # we opt to use this latetest version updated by 3DGs instead of the old version we used in paper. 
 # cd sibr_core
+# git checkout 4ae964a # we opt to use this latetest version updated by 3DGs instead of the old version we used in paper. 
 # cmake -Bbuild .
 # ```
 # after ```cmake -Bbuild .```, it will automaticly donwload third party libraries provided by Inria (takes several minutes for the first time). </br>
 # We need to update two default folders (```CudaRasterizer```, ```projects```) with our provided codes.  
-# Just, update everthing except .git in ```extlibs\CudaRasterizer``` with our ```thirdparty\gaussian_splatting\realtimedemo\extlibs\CudaRasterizer```
-# And, update everthing except .git in  ```src\projects``` with our ```thirdparty\gaussian_splatting\realtimedemo\projects```
+# Just, update everthing except .git in ```extlibs\CudaRasterizer``` with our ```thirdparty\gaussian_splatting\realtimedemolite\extlibs\CudaRasterizer```
+# And, update everthing except .git in  ```src\projects``` with our ```thirdparty\gaussian_splatting\realtimedemolite\projects```
 # during replaceing, please keep the orginal .git dirtory. only replace the code
 # after manually update the two folders, you can rebuild the projects
 # ```
