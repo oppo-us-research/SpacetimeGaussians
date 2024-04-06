@@ -50,6 +50,7 @@ pip install thirdparty/gaussian_splatting/submodules/forward_full
 ```
 
 ## Processing Datasets
+Note, our paper uses the sparse points that follow 3DGS. Our per frame SfM points only use ```point_triangulator``` in Colmap instead of dense points.  
 ### Neural 3D Dataset
 Download the dataset from [here](https://github.com/facebookresearch/Neural_3D_Video.git).
 After downloading the dataset, you can run the following command to preprocess the dataset. </br>
