@@ -505,8 +505,8 @@ def test_ours_fullss_fused(viewpoint_camera, pc : GaussianModel, pipe, bg_color 
         scales = pc.computedscales,
         rotations = rotations,
         cov3D_precomp = cov3D_precomp,
-        mlp1 = pc.rgbdecoder.mlp2.weight.squeeze(3).squeeze(2).flatten(),
-        mlp2 = pc.rgbdecoder.mlp3.weight.squeeze(3).squeeze(2).flatten(),
+        mlp1 = pc.rgbdecoder.mlp1.weight.squeeze(3).squeeze(2).flatten(),
+        mlp2 = pc.rgbdecoder.mlp2.weight.squeeze(3).squeeze(2).flatten(),
         rayimage = viewpoint_camera.rays)
 
     torch.cuda.synchronize()
