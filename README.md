@@ -40,7 +40,7 @@ cd SpacetimeGaussians
 Then run the following command to install the environments with conda.
 Note we will create two environments, one for preprocessing with colmap (```colmapenv```) and one for training and testing (```feature_splatting```). Training, testing and preprocessing have been tested on Ubuntu 20.04. </br>
 ```
-bash cript/setup.sh
+bash script/setup.sh
 ```
 Note that you may need to manually install the following packages if you encounter errors during the installation of the above command. </br>
 
