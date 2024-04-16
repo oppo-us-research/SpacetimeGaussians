@@ -28,9 +28,9 @@ This is an official implementation of the paper "Spacetime Gaussian Feature Spla
 
 
 ## Installation
-###  Windows users with WSL2
+### Windows users with WSL2 :
 Please first refer to [here](./script/wsl.md) to install the WSL2 system (Windows Subsystem for Linux 2) and install dependencies inside WSL2. Then you can set up our repo inside the Linux sub-system same as other Linux users. 
-### Linux users and WSL users:
+### Linux users :
 Clone the source code of this repo.
 ```
 git clone https://github.com/oppo-us-research/SpacetimeGaussians.git
