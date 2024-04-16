@@ -28,6 +28,9 @@ This is an official implementation of the paper "Spacetime Gaussian Feature Spla
 
 
 ## Installation
+###  Windows users with WSL2
+Please first refer to [here](./script/wsl.md) to install the WSL2 system (Windows Subsystem for Linux 2) and install dependencies inside WSL2. Then you can set up our repo inside the Linux sub-system same as other Linux users. 
+### Linux users and WSL users:
 Clone the source code of this repo.
 ```
 git clone https://github.com/oppo-us-research/SpacetimeGaussians.git
@@ -37,7 +40,7 @@ cd SpacetimeGaussians
 Then run the following command to install the environments with conda.
 Note we will create two environments, one for preprocessing with colmap (```colmapenv```) and one for training and testing (```feature_splatting```). Training, testing and preprocessing have been tested on Ubuntu 20.04. </br>
 ```
-bash script/setup.sh
+bash cript/setup.sh
 ```
 Note that you may need to manually install the following packages if you encounter errors during the installation of the above command. </br>
 
