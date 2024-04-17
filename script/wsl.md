@@ -43,7 +43,7 @@ yourlinuxname@yourdevice:/mnt/c/Users/yourusername/wslworkspace$
 ```
 vim ~/.bashrc
 ```
-then type in ```i``` to insert, move the cursor to the end, paste command ```export PATH=/usr/local/cuda-12.4/bin${PATH:+:${PATH}}``` and ```export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64``` tp the end two lines of file, press ```Esc```, then press ```Shift``` and ```:``` at them same time, type in ```wq``` to write the modification (w) and exit (q) the vim. 
+then type in ```i``` to insert, move the cursor to the end, paste command ```export PATH=/usr/local/cuda-11.8/bin${PATH:+:${PATH}}``` and ```export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda-11.8/lib64``` tp the end two lines of file, press ```Esc```, then press ```Shift``` and ```:``` at them same time, type in ```wq``` to write the modification (w) and exit (q) the vim. 
 
 
 To make new path effect, please type following in the terminal of wsl:
