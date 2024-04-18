@@ -58,10 +58,10 @@ nvcc --version
 following should be returned:
 ```
 nvcc: NVIDIA (R) Cuda compiler driver
-Copyright (c) 2005-2024 NVIDIA Corporation
-Built on Thu_Mar_28_02:18:24_PDT_2024
-Cuda compilation tools, release 12.4, V12.4.131
-Build cuda_12.4.r12.4/compiler.34097967_0
+Copyright (c) 2005-2022 NVIDIA Corporation
+Built on Wed_Sep_21_10:33:58_PDT_2022
+Cuda compilation tools, release 11.8, V11.8.89
+Build cuda_11.8.r11.8/compiler.31833905_0
 ```
 
 
