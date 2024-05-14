@@ -22,8 +22,8 @@ Windows version: 10.0.22631.2861
 
 
 ```
-mkdir wlsworkspace 
-cd wlsworkspace
+mkdir wslworkspace 
+cd wslworkspace
 wsl 
 ```
 after that you should be at this path inside wsl2. (```/mnt/c/``` in wsl2 is at the path of ```C:``` in windows ) 
