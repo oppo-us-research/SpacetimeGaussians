@@ -144,6 +144,7 @@ class OptimizationParams(ParamGroup):
         self.loadall = 0
         self.removescale = 5
         self.gtmask = 0 # 0 means not train with mask for undistorted gt image; 1 means 
+        self.gtisint8 = 0 # 0 means gt is used as float . 
         super().__init__(parser, "Optimization Parameters")
 
 def get_combined_args(parser : ArgumentParser):

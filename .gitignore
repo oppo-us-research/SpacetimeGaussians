@@ -37,3 +37,4 @@ generatecode.py
 getconfig.py
 test.sh
 *.sh
+log/*

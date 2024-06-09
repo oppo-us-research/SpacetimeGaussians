@@ -39,7 +39,7 @@ from tqdm import tqdm
 sys.path.append("./thirdparty/gaussian_splatting")
 
 from thirdparty.gaussian_splatting.utils.loss_utils import l1_loss, ssim, l2_loss, rel_loss
-from helper_train import getrenderpip, getmodel, getloss, controlgaussians, reloadhelper, trbfunction
+from helper_train import getrenderpip, getmodel, getloss, controlgaussians, reloadhelper, trbfunction, setgtisint8, getgtisint8
 from thirdparty.gaussian_splatting.scene import Scene
 from argparse import Namespace
 from thirdparty.gaussian_splatting.helper3dg import getparser, getrenderparts
@@ -154,6 +154,7 @@ def train(dataset, opt, pipe, saving_iterations, debug_from, densify=0, duration
 
     selectedlength = 2
     lasterems = 0 
+    gtisint8 = getgtisint8()
 
     for iteration in range(first_iter, opt.iterations + 1):        
         if iteration ==  opt.emsstart:
@@ -177,7 +178,12 @@ def train(dataset, opt, pipe, saving_iterations, debug_from, densify=0, duration
                 viewpoint_cam = camindex[i]
                 render_pkg = render(viewpoint_cam, gaussians, pipe, background,  override_color=None,  basicfunction=rbfbasefunction, GRsetting=GRsetting, GRzer=GRzer)
                 image, viewspace_point_tensor, visibility_filter, radii = getrenderparts(render_pkg) 
-                gt_image = viewpoint_cam.original_image.float().cuda()
+                
+                if gtisint8:
+                    gt_image = viewpoint_cam.original_image.cuda().float()/255.0
+                else:
+                    # cast float on cuda will introduce gradient, so cast first then to cuda. at the cost of i/o
+                    gt_image = viewpoint_cam.original_image.float().cuda()  
                 if opt.gtmask: # for training with undistorted immerisve image, masking black pixels in undistorted image. 
                     mask = torch.sum(gt_image, dim=0) == 0
                     mask = mask.float()
@@ -394,6 +400,7 @@ if __name__ == "__main__":
     
 
     args, lp_extract, op_extract, pp_extract = getparser()
+    setgtisint8(op_extract.gtisint8)
     train(lp_extract, op_extract, pp_extract, args.save_iterations, args.debug_from, densify=args.densify, duration=args.duration, rgbfunction=args.rgbfunction, rdpip=args.rdpip)
 
     # All done

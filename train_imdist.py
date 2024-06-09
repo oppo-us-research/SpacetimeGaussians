@@ -43,7 +43,7 @@ import json
 sys.path.append("./thirdparty/gaussian_splatting")
 ### do no
 from thirdparty.gaussian_splatting.utils.loss_utils import l1_loss, ssim, l2_loss, rel_loss, ssimmap
-from helper_train import getrenderpip, getmodel, getloss, removeminmax, reloadhelper, trbfunction,undistortimage
+from helper_train import getrenderpip, getmodel, getloss, removeminmax, reloadhelper, trbfunction,undistortimage, getgtisint8, setgtisint8
 from thirdparty.gaussian_splatting.scene import Scene
 from thirdparty.gaussian_splatting.utils.general_utils import safe_state
 from tqdm import tqdm
@@ -83,6 +83,10 @@ def load_pkl(path):
         return pickle.load(f)
 
 def train(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoint_iterations, checkpoint, debug_from, densify=0, duration=50, basicfunction="gaussian", rgbfunction="rgbv1", rdpip="v2"):
+    
+    
+    setgtisint8(opt.gtisint8)
+
     first_iter = 0
     render, GRsetting, GRzer = getrenderpip(rdpip)
 
@@ -217,6 +221,7 @@ def train(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoint_
     selectedlength = 3
     lasterems = 0 
     lastrest = 0
+    gtisint8 = getgtisint8()
     
     
     for iteration in range(first_iter, opt.iterations + 1): 
@@ -257,8 +262,11 @@ def train(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoint_
                 viewpoint_cam = camindex[i]
                 render_pkg = render(viewpoint_cam, gaussians, pipe, background,  override_color=None,  basicfunction=rbfbasefunction, GRsetting=GRsetting, GRzer=GRzer)
                 image, viewspace_point_tensor, visibility_filter, radii = render_pkg["render"], render_pkg["viewspace_points"], render_pkg["visibility_filter"], render_pkg["radii"]
-                gt_image = viewpoint_cam.original_image.float().cuda() 
-
+                if gtisint8:
+                    gt_image = viewpoint_cam.original_image.cuda().float()/255.0
+                else:
+                    # cast float on cuda will introduce gradient, so cast first then to cuda. at the cost of i/o
+                    gt_image = viewpoint_cam.original_image.float().cuda()  
 
                 
                 if opt.reg == 2:

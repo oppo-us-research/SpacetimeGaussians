@@ -43,6 +43,7 @@ from simple_knn._C import distCUDA2
 import os 
 import json 
 import cv2
+import os 
 from script.pre_immersive_distorted import SCALEDICT 
 
 
@@ -384,3 +385,10 @@ def undistortimage(imagename, datasetpath,data):
 
 def trbfunction(x): 
     return torch.exp(-1*x.pow(2))
+
+def setgtisint8(value):
+    print("set current resized gt image as int8 for memory: ", value)
+    os.environ['gtisint8'] = str(value)
+def getgtisint8():
+    #print("get current gt", bool(int(os.getenv('gtisint8'))))
+    return bool(int(os.getenv('gtisint8')))

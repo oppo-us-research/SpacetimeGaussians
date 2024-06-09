@@ -18,6 +18,7 @@ from utils.graphics_utils import fov2focal
 #     return pixels / (2 * math.tan(fov / 2))
 from kornia import create_meshgrid
 from helper_model import pix2ndc
+from helper_train import getgtisint8
 import random 
 class Camera(nn.Module):
     def __init__(self, colmap_id, R, T, FoVx, FoVy, image, gt_alpha_mask,
@@ -41,19 +42,23 @@ class Camera(nn.Module):
             print(e)
             print(f"[Warning] Custom device {data_device} failed, fallback to default cuda device" )
             self.data_device = torch.device("cuda")
-
         # image is real image 
         if not isinstance(image, tuple):
-            if "camera_" not in image_name:
-                self.original_image = image.clamp(0.0, 1.0).to(self.data_device)
+            if getgtisint8():
+                self.original_image = (image*255).to(torch.uint8).to(self.data_device)
             else:
-                self.original_image = image.clamp(0.0, 1.0).half().to(self.data_device)
+                if "camera_" not in image_name:
+                    self.original_image = image.clamp(0.0, 1.0).to(self.data_device)
+                else:
+                    self.original_image = image.clamp(0.0, 1.0).half().to(self.data_device)
+            
+            
             self.image_width = self.original_image.shape[2]
             self.image_height = self.original_image.shape[1]
-            if gt_alpha_mask is not None:
-                self.original_image *= gt_alpha_mask.to(self.data_device)
-            else:
-                self.original_image *= torch.ones((1, self.image_height, self.image_width), device=self.data_device)
+            # if gt_alpha_mask is not None:
+            #     self.original_image *= gt_alpha_mask.to(self.data_device)
+            # else:
+            #     self.original_image *= torch.ones((1, self.image_height, self.image_width), device=self.data_device)
 
         else:
             self.image_width = image[0]
@@ -152,14 +157,19 @@ class Camerass(nn.Module):
             self.data_device = torch.device("cuda")
 
         # image is real image 
+        
         if not isinstance(image, tuple):
-            if "camera_" not in image_name:
-                self.original_image = image.clamp(0.0, 1.0).to(self.data_device)
+           
+            if getgtisint8():
+                self.original_image = (image*255).to(torch.uint8).to(self.data_device)
             else:
-                self.original_image = image.clamp(0.0, 1.0).half().to(self.data_device)
-            print("read one")# lazy loader already in it
-            self.image_width = self.original_image.shape[2]
-            self.image_height = self.original_image.shape[1]
+                if "camera_" not in image_name:
+                    self.original_image = image.clamp(0.0, 1.0).to(self.data_device)
+                else:
+                    self.original_image = image.clamp(0.0, 1.0).half().to(self.data_device)
+                print("read one")# lazy loader already in it
+                self.image_width = self.original_image.shape[2]
+                self.image_height = self.original_image.shape[1]
 
         else:
             self.image_width = image[0] 
