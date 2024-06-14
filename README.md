@@ -15,6 +15,13 @@ This is an official implementation of the paper "Spacetime Gaussian Feature Spla
 
 <img src="assets/output.gif" width="100%"/></br>
 
+## Updates and News
+- `Jun 13, 2024`: Fixed minors for reproducity on the scenes ```coffee_martini``` and ```flame_salmon_1``` (~ 0.1 PSNR).
+- `Jun 9, 2024`: Support lazy loading and ground truth image as int8 in GPU.
+- `Dec 28, 2023`: Paper and Code are released.
+
+
+
 ## Table of Contents
 1. [Installation](#installation)
 1. [Preprocess Datasets](#processing-datasets)
@@ -272,11 +279,13 @@ We also want to thank MrNeRF for [posts](https://x.com/janusch_patas/status/1740
 ## Citations
 Please cite our paper if you find it useful for your research.
 ```
-@article{li2023spacetimegaussians,
-  title={Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis},
-  author={Li, Zhan and Chen, Zhang and Li, Zhong and Xu, Yi},
-  journal={arXiv preprint arXiv:2312.16812},
-  year={2023}
+@InProceedings{Li_STG_2024_CVPR,
+    author    = {Li, Zhan and Chen, Zhang and Li, Zhong and Xu, Yi},
+    title     = {Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2024},
+    pages     = {8508-8520}
 }
 ```
 

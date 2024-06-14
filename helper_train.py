@@ -246,10 +246,7 @@ def controlgaussians(opt, gaussians, densify, iteration, scene,  visibility_filt
             if iteration % 3000 == 0 :
                 gaussians.reset_opacity()
         else:
-            if iteration % 1000 == 500 :
-                zmask = gaussians._xyz[:,2] < 4.5  # for stability  
-                gaussians.prune_points(zmask) 
-                torch.cuda.empty_cache()
+            pass 
         return flag
     
 
@@ -391,4 +388,7 @@ def setgtisint8(value):
     os.environ['gtisint8'] = str(value)
 def getgtisint8():
     #print("get current gt", bool(int(os.getenv('gtisint8'))))
-    return bool(int(os.getenv('gtisint8')))
+    try:
+        return bool(int(os.getenv('gtisint8')))
+    except:
+        return False 
