@@ -74,6 +74,13 @@ def getrenderpip(option="train_ours_full"):
         from forward_lite import GaussianRasterizationSettings 
         from forward_lite import GaussianRasterizer 
         return test_ours_lite, GaussianRasterizationSettings, GaussianRasterizer
+    
+    elif option == "test_ours_full_fused":
+        from thirdparty.gaussian_splatting.renderer import test_ours_full_fused
+        from forward_full import GaussianRasterizationSettings
+        from forward_full import GaussianRasterizer
+        return test_ours_full_fused, GaussianRasterizationSettings, GaussianRasterizer
+    
     elif option == "train_ours_fullss":
         from thirdparty.gaussian_splatting.renderer import train_ours_fullss
         from diff_gaussian_rasterization_ch9 import GaussianRasterizationSettings 

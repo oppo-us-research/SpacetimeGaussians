@@ -194,6 +194,98 @@ def test_ours_full(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.
             "opacity": opacity,
             "depth": depth,
             "duration":duration}
+
+
+def test_ours_full_fused(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, scaling_modifier = 1.0, override_color = None, basicfunction = None, GRsetting=None, GRzer=None):
+
+ 
+    # Create zero tensor. We will use it to make pytorch return gradients of the 2D (screen-space) means
+     
+    try: 
+        getattr(pc.rgbdecoder, "sigmoid")
+        usesigmoid = True 
+    except:
+        usesigmoid = False 
+
+    screenspace_points = torch.zeros_like(pc.get_xyz, dtype=pc.get_xyz.dtype, requires_grad=True, device="cuda") + 0
+
+
+    torch.cuda.synchronize()
+    startime = time.time()#perf_counter
+
+    tanfovx = math.tan(viewpoint_camera.FoVx * 0.5)
+    tanfovy = math.tan(viewpoint_camera.FoVy * 0.5)
+
+    raster_settings = GRsetting(
+        image_height=int(viewpoint_camera.image_height),
+        image_width=int(viewpoint_camera.image_width),
+        tanfovx=tanfovx,
+        tanfovy=tanfovy,
+        bg=bg_color,
+        scale_modifier=scaling_modifier,
+        viewmatrix=viewpoint_camera.world_view_transform,
+        projmatrix=viewpoint_camera.full_proj_transform,
+        sh_degree=pc.active_sh_degree,
+        campos=viewpoint_camera.camera_center,
+        prefiltered=False,
+        debug=False)
+
+    rasterizer = GRzer(raster_settings=raster_settings)
+    
+    
+
+
+    tforpoly = viewpoint_camera.timestamp - pc.get_trbfcenter
+    rotations = pc.get_rotation(tforpoly) # to try use 
+    colors_precomp = pc.get_features(tforpoly)
+
+    
+    means2D = screenspace_points
+   
+
+    cov3D_precomp = None
+
+    #scales = pc.get_scaling
+
+    shs = None
+    # sandwichold 2,3
+    rendered_image, radii = rasterizer(
+        timestamp = viewpoint_camera.timestamp, 
+        trbfcenter = pc.get_trbfcenter,
+        trbfscale = pc.computedtrbfscale ,
+        motion = pc._motion,
+        means3D = pc.get_xyz,
+        means2D = means2D,
+        shs = shs,
+        colors_precomp = colors_precomp,
+        opacities = pc.computedopacity,
+        scales = pc.computedscales,
+        rotations = rotations,
+        cov3D_precomp = cov3D_precomp,
+        mlp1 = pc.rgbdecoder.mlp1.weight.squeeze(3).squeeze(2).flatten(), 
+        mlp2 = pc.rgbdecoder.mlp2.weight.squeeze(3).squeeze(2).flatten(),
+        rayimage = viewpoint_camera.rays)
+    # add sigmoid for n3d dataset, but should be even faster in the cuda   
+    if usesigmoid == True:
+        rendered_image = torch.sigmoid(rendered_image)
+    else:
+        pass 
+    torch.cuda.synchronize()
+    duration = time.time() - startime #
+
+    # INTER_CUBIC
+    rendered_image = rendered_image.squeeze(0)
+
+
+    return {"render": rendered_image,
+            "viewspace_points": screenspace_points,
+            "visibility_filter" : radii > 0,
+            "radii": radii,
+            "rawrendered_image": rendered_image,
+             "duration": duration}
+
+
+
 def test_ours_lite(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, scaling_modifier = 1.0, override_color = None, basicfunction = None,GRsetting=None, GRzer=None):
 
     screenspace_points = torch.zeros_like(pc.get_xyz, dtype=pc.get_xyz.dtype, requires_grad=True, device="cuda") + 0

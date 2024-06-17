@@ -16,8 +16,9 @@ This is an official implementation of the paper "Spacetime Gaussian Feature Spla
 <img src="assets/output.gif" width="100%"/></br>
 
 ## Updates and News
+- `Jun 16, 2024`: Added fully fused mlp for testing ours-full models on Technicolor and Neural 3D dataset (40 FPS improvement compared to paper).
 - `Jun 13, 2024`: Fixed minors for reproducity on the scenes ```coffee_martini``` and ```flame_salmon_1``` (~ 0.1 PSNR).
-- `Jun 9, 2024`: Support lazy loading and ground truth image as int8 in GPU.
+- `Jun 9, 2024` : Supported lazy loading and ground truth image as int8 in GPU.
 - `Dec 28, 2023`: Paper and Code are released.
 
 
