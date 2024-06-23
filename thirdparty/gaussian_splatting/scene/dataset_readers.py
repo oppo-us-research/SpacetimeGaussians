@@ -878,21 +878,29 @@ def readColmapSceneInfoTechnicolor(path, images, eval, llffhold=8, multiview=Fal
     # for cam_info in cam_infos:
     #     print(cam_info.uid, cam_info.R, cam_info.T, cam_info.FovY, cam_info.image_name)
 
+
     if eval:
-        train_cam_infos = [_ for _ in cam_infos if "cam10" not in _.image_name]
-        test_cam_infos = [_ for _ in cam_infos if "cam10" in _.image_name]
-        uniquecheck = []
-        for cam_info in test_cam_infos:
-            if cam_info.image_name not in uniquecheck:
-                uniquecheck.append(cam_info.image_name)
-        assert len(uniquecheck) == 1 
-        
-        sanitycheck = []
-        for cam_info in train_cam_infos:
-            if cam_info.image_name not in sanitycheck:
-                sanitycheck.append(cam_info.image_name)
-        for testname in uniquecheck:
-            assert testname not in sanitycheck
+            train_cam_infos = [_ for _ in cam_infos if "cam10" not in _.image_name]
+            test_cam_infos = [_ for _ in cam_infos if "cam10" in _.image_name]
+            if len(test_cam_infos) > 0:
+                uniquecheck = []
+                for cam_info in test_cam_infos:
+                    if cam_info.image_name not in uniquecheck:
+                        uniquecheck.append(cam_info.image_name)
+                assert len(uniquecheck) == 1 
+                
+                sanitycheck = []
+                for cam_info in train_cam_infos:
+                    if cam_info.image_name not in sanitycheck:
+                        sanitycheck.append(cam_info.image_name)
+                for testname in uniquecheck:
+                    assert testname not in sanitycheck
+            else:
+                first_cam = cam_infos[0].image_name
+                print("do custom loader training, select first cam as test frame: ", first_cam)
+                cam_infos = natsort.natsorted(cam_infos_unsorted.copy(), key = lambda x : x.image_name)
+                train_cam_infos = [_ for _ in cam_infos if first_cam not in _.image_name]
+                test_cam_infos = [_ for _ in cam_infos if first_cam in _.image_name]
     else:
         train_cam_infos = cam_infos
         test_cam_infos = cam_infos[:4]
