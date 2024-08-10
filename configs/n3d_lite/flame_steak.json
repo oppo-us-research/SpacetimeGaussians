@@ -4,6 +4,6 @@
   "scaling_lr": 0.0015,
   "preprocesspoints": 3,
   "test_iteration": 25000,
-  "duration": 50,
+  "duration": 25,
   "rdpip": "train_ours_lite"
 }
