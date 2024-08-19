@@ -164,7 +164,7 @@ You can train our model by running the following command: </br>
 
 ```
 conda activate feature_splatting
-python train.py --quiet --eval --config config/<dataset>_<lite|full>/<scene>.json --model_path <path to save model> --source_path <location>/<scene>/colmap_0
+python train.py --quiet --eval --config configs/<dataset>_<lite|full>/<scene>.json --model_path <path to save model> --source_path <location>/<scene>/colmap_0
 ```
 In the argument to ```--config```, ```<dataset>``` can be ```n3d``` (for Neural 3D Dataset) or ```techni``` (for Technicolor Dataset), and you can choose between ```full``` model or ```lite``` model. </br>
 You need 24GB GPU memory to train on the Neural 3D Dataset. </br>
@@ -208,12 +208,12 @@ Please refer to the .json config files for more options.
 - Test model on Neural 3D Dataset
 
 ```
-python test.py --quiet --eval --skip_train --valloader colmapvalid --configpath config/n3d_<lite|full>/<scene>.json --model_path <path to model> --source_path <location>/<scene>/colmap_0
+python test.py --quiet --eval --skip_train --valloader colmapvalid --configpath configs/n3d_<lite|full>/<scene>.json --model_path <path to model> --source_path <location>/<scene>/colmap_0
 ```
 
 - Test model on Technicolor Dataset
 ```
-python test.py --quiet --eval --skip_train --valloader technicolorvalid --configpath config/techni_<lite|full>/<scene>.json --model_path <path to model> --source_path <location>/<scenename>/colmap_0
+python test.py --quiet --eval --skip_train --valloader technicolorvalid --configpath configs/techni_<lite|full>/<scene>.json --model_path <path to model> --source_path <location>/<scenename>/colmap_0
 ```
 - Test on Google Immersive Dataset with distortion camera model 
 
@@ -223,7 +223,7 @@ pip install thirdparty/gaussian_splatting/submodules/forward_full
 ```
 
 ```
-PYTHONDONTWRITEBYTECODE=1 CUDA_VISIBLE_DEVICES=0 python test.py --quiet --eval --skip_train --valloader immersivevalidss --configpath config/im_distort_<lite|full>/<scene>.json --model_path <path to model> --source_path <location>/<scenename>/colmap_0
+PYTHONDONTWRITEBYTECODE=1 CUDA_VISIBLE_DEVICES=0 python test.py --quiet --eval --skip_train --valloader immersivevalidss --configpath configs/im_distort_<lite|full>/<scene>.json --model_path <path to model> --source_path <location>/<scenename>/colmap_0
 ```
 
 

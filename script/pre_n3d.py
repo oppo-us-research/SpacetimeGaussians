@@ -20,7 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import os 
+import os
+from pathlib import Path
+
 import cv2 
 import glob 
 import tqdm 
@@ -37,32 +39,31 @@ from thirdparty.gaussian_splatting.helper3dg import getcolmapsinglen3d
 
 
 
-def extractframes(videopath):
-    cam = cv2.VideoCapture(videopath)
-    ctr = 0
-    sucess = True
-    for i in range(300):
-        if os.path.exists(os.path.join(videopath.replace(".mp4", ""), str(i) + ".png")):
-            ctr += 1
-    if ctr == 300 or ctr == 150: # 150 for 04_truck 
-        print("already extracted all the frames, skip extracting")
+def extractframes(videopath_str, startframe=0, endframe=300, downscale=1):
+    videopath = Path(videopath_str)
+    output_dir = videopath.with_suffix('')
+    if all((output_dir / f"{i}.png").exists() for i in range(startframe, endframe)):
+        print(f"Already extracted all the frames in {output_dir}")
         return
-    ctr = 0
-    while ctr < 300:
-        try:
-            _, frame = cam.read()
 
-            savepath = os.path.join(videopath.replace(".mp4", ""), str(ctr) + ".png")
-            if not os.path.exists(videopath.replace(".mp4", "")) :
-                os.makedirs(videopath.replace(".mp4", ""))
+    cam = cv2.VideoCapture(str(videopath))
+    cam.set(cv2.CAP_PROP_POS_FRAMES, startframe)
 
-            cv2.imwrite(savepath, frame)
-            ctr += 1 
-        except:
-            sucess = False
-            print("error")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    for i in range(startframe, endframe):
+        success, frame = cam.read()
+        if not success:
+            print(f"Error reading frame {i}")
+            break
+
+        if downscale > 1:
+            new_width, new_height = int(frame.shape[1] / downscale), int(frame.shape[0] / downscale)
+            frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+        cv2.imwrite(str(output_dir / f"{i}.png"), frame)
+
     cam.release()
-    return
 
 
 def preparecolmapdynerf(folder, offset=0):
@@ -82,7 +83,7 @@ def preparecolmapdynerf(folder, offset=0):
 
 
     
-def convertdynerftocolmapdb(path, offset=0):
+def convertdynerftocolmapdb(path, offset=0, downscale=1):
     originnumpy = os.path.join(path, "poses_bounds.npy")
     video_paths = sorted(glob.glob(os.path.join(path, 'cam*.mp4')))
     projectfolder = os.path.join(path, "colmap_" + str(offset))
@@ -122,7 +123,7 @@ def convertdynerftocolmapdb(path, offset=0):
             colmapR = m[:3, :3]
             T = m[:3, 3]
             
-            H, W, focal = poses[i, :, -1]
+            H, W, focal = poses[i, :, -1] / downscale
             
             colmapQ = rotmat2qvec(colmapR)
             # colmapRcheck = qvec2rotmat(colmapQ)
@@ -173,13 +174,16 @@ if __name__ == "__main__" :
     parser.add_argument("--videopath", default="", type=str)
     parser.add_argument("--startframe", default=0, type=int)
     parser.add_argument("--endframe", default=50, type=int)
+    parser.add_argument("--downscale", default=1, type=int)
 
     args = parser.parse_args()
     videopath = args.videopath
 
     startframe = args.startframe
     endframe = args.endframe
+    downscale = args.downscale
 
+    print(f"params: startframe={startframe} - endframe={endframe} - downscale={downscale} - videopath={videopath}")
 
     if startframe >= endframe:
         print("start frame must smaller than end frame")
@@ -200,7 +204,7 @@ if __name__ == "__main__" :
     print("start extracting 300 frames from videos")
     videoslist = glob.glob(videopath + "*.mp4")
     for v in tqdm.tqdm(videoslist):
-        extractframes(v)
+        extractframes(v, downscale=downscale)
 
     
 
@@ -213,7 +217,7 @@ if __name__ == "__main__" :
     print("start preparing colmap database input")
     # # ## step 3 prepare colmap db file 
     for offset in range(startframe, endframe):
-        convertdynerftocolmapdb(videopath, offset)
+        convertdynerftocolmapdb(videopath, offset, downscale)
 
 
     # ## step 4 run colmap, per frame, if error, reinstall opencv-headless 
