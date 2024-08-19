@@ -204,7 +204,7 @@ if __name__ == "__main__" :
     print("start extracting 300 frames from videos")
     videoslist = glob.glob(videopath + "*.mp4")
     for v in tqdm.tqdm(videoslist):
-        extractframes(v, startframe, endframe, downscale)
+        extractframes(v, downscale=downscale)
 
     
 
