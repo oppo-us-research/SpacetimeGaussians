@@ -194,10 +194,10 @@ Note, sometimes pycache file somehow affects the results. Please remove every py
 
 
 - If you want to train the **lite** model with **undistorted** immersive dataset.   
-Note, we remove the ```--eval``` to reuse the loader of technicolor and also to train with all cameras.  ```maskgt 1``` is specially for training with undistorted fisheye images that have black pixels.
+Note, we remove the ```--eval``` to reuse the loader of technicolor and also to train with all cameras.  ```gtmask 1``` is specially for training with undistorted fisheye images that have black pixels.
 
 ```
-python train.py --quiet --maskgt 1 --config configs/im_undistort_lite/02_Flames.json --model_path log/02_Flames/colmap_0 --source_path <location>/02_Flames_undist/colmap_0 
+python train.py --quiet --gtmask 1 --config configs/im_undistort_lite/02_Flames.json --model_path log/02_Flames/colmap_0 --source_path <location>/02_Flames_undist/colmap_0 
 ```
 
 Please refer to the .json config files for more options.
