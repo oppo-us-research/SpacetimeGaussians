@@ -299,7 +299,7 @@ if __name__ == "__main__" :
         extractframes(v)
 
 
-    softlinkdataset(originalpath, dstpath, srcscene, scene)
+    softlinkdataset(originalpath, dstpath)
 
     imageundistort_no_mapper(dstpath, offsetlist=[i for i in range(startframe,endframe)],focalscale=scale, fixfocal=None)
   
