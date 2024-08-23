@@ -41,7 +41,7 @@ Please first refer to [here](./script/wsl.md) to install the WSL2 system (Window
 ### Linux users :
 Clone the source code of this repo.
 ```
-git clone https://github.com/oppo-us-research/SpacetimeGaussians.git
+git clone https://github.com/oppo-us-research/SpacetimeGaussians.git --recursive
 cd SpacetimeGaussians
 ```
 
