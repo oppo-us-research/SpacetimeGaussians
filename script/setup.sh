@@ -27,9 +27,7 @@ pip install thirdparty/gaussian_splatting/submodules/simple-knn
 # install opencv-python-headless, to work with colmap on server
 pip install opencv-python
 # Install MMCV for CUDA KNN, used for init point sampling, reduce number of points when sfm points are too many
-cd thirdparty
-git clone https://github.com/open-mmlab/mmcv.git
-cd mmcv
+cd thirdparty/mmcv # if mmcv dir is empty this is because you forgot to clone with --recursive, you can run `git submodule update --init`
 pip install -e .
 cd ../../
 
