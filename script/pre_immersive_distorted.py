@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 import os 
+from pathlib import Path
 import cv2 
 import glob 
 import tqdm 
@@ -329,24 +330,21 @@ def imageundistort(video, offsetlist=[0],focalscale=1.0, fixfocal=None):
 
 
 
-def softlinkdataset(originalpath, path, srcscene, scene):
-    videofolderlist = glob.glob(originalpath + "camera_*/")
+def softlinkdataset(original_str, target_str):
+    originalpath = Path(original_str)
+    path = Path(target_str)
 
-    if not os.path.exists(path):
-        os.makedirs(path)
-
+    videofolderlist = [f for f in sorted(originalpath.glob("camera_*")) if f.is_dir()]
+    path.mkdir(exist_ok=True)
     for videofolder in videofolderlist:
-        newlink = os.path.join(path, videofolder.split("/")[-2])
-        if not os.path.exists(newlink):
-            cmd = " ln -s " + videofolder + " " + newlink
-            os.system(cmd)
-            print(cmd)
+        newlink = path / videofolder.name
+        if not newlink.exists():
+            newlink.symlink_to(videofolder.resolve()) #make sure to use absolute path with symlink
+            print(f"symlink: {newlink} -> {videofolder.resolve()}")
         else:
-            print("already exists do not make softlink again")
+            print("already exists, do not make softlink again")
+    shutil.copy(originalpath / "models.json", path / "models.json")
 
-    originalmodel = os.path.join(originalpath, "models.json")
-    newmodelpath = os.path.join(path, "models.json")
-    shutil.copy(originalmodel, newmodelpath)
 if __name__ == "__main__" :
     parser = argparse.ArgumentParser()
  
@@ -399,7 +397,7 @@ if __name__ == "__main__" :
     for v in tqdm.tqdm(videoslist):
         extractframes(v)
 
-    softlinkdataset(originalpath, dstpath, srcscene, scene)
+    softlinkdataset(originalpath, dstpath)
   
     
     imageundistort(dstpath, offsetlist=[i for i in range(startframe,endframe)],focalscale=scale, fixfocal=None)
