@@ -1,0 +1,3 @@
+[submodule "thirdparty/mmcv"]
+	path = thirdparty/mmcv
+	url = git@github.com:open-mmlab/mmcv.git
