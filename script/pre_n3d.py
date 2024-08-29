@@ -31,6 +31,9 @@ import shutil
 import pickle
 import sys 
 import argparse
+
+from script.utils_pre import write_colmap
+
 sys.path.append(".")
 from thirdparty.gaussian_splatting.utils.my_utils import posetow2c_matrcs, rotmat2qvec
 from thirdparty.colmap.pre_colmap import * 
@@ -86,24 +89,6 @@ def preparecolmapdynerf(folder, offset=0):
 def convertdynerftocolmapdb(path, offset=0, downscale=1):
     originnumpy = path / "poses_bounds.npy"
     video_paths = sorted(path.glob('cam*.mp4'))
-    projectfolder = path / f"colmap_{offset}"
-    manualfolder = projectfolder / "manual"
-
-    manualfolder.mkdir(exist_ok=True)
-
-    savetxt = manualfolder / "images.txt"
-    savecamera = manualfolder / "cameras.txt"
-    savepoints = manualfolder / "points3D.txt"
-
-    imagetxtlist = []
-    cameratxtlist = []
-
-    db_path = projectfolder / "input.db"
-    if db_path.exists():
-        db_path.unlink()
-
-    db = COLMAPDatabase.connect(db_path)
-    db.create_tables()
 
     with open(originnumpy, 'rb') as numpy_file:
         poses_bounds = np.load(numpy_file)
@@ -113,6 +98,7 @@ def convertdynerftocolmapdb(path, offset=0, downscale=1):
         w2c_matriclist = posetow2c_matrcs(llffposes)
         assert (type(w2c_matriclist) == list)
 
+        cameras = []
         for i in range(len(poses)):
             cameraname = video_paths[i].stem
             m = w2c_matriclist[i]
@@ -122,33 +108,23 @@ def convertdynerftocolmapdb(path, offset=0, downscale=1):
             H, W, focal = poses[i, :, -1] / downscale
 
             colmapQ = rotmat2qvec(colmapR)
-            # colmapRcheck = qvec2rotmat(colmapQ)
 
-            imageid = str(i + 1)
-            cameraid = imageid
-            pngname = f"{cameraname}.png"
+            camera = {
+                'id': i + 1,
+                'filename': f"{cameraname}.png",
+                'w': W,
+                'h': H,
+                'fx': focal,
+                'fy': focal,
+                'cx': W // 2,
+                'cy': H // 2,
+                'q': colmapQ,
+                't': T,
+            }
+            cameras.append(camera)
 
-            line = f"{imageid} " + " ".join(map(str, colmapQ)) + " " + " ".join(
-                map(str, T)) + f" {cameraid} {pngname}\n"
-            imagetxtlist.append(line)
-            imagetxtlist.append("\n")
+    write_colmap(path, cameras, offset)
 
-            focolength = focal
-            model, width, height, params = i, W, H, np.array((focolength, focolength, W // 2, H // 2,))
-
-            camera_id = db.add_camera(1, width, height, params)
-            cameraline = f"{i + 1} PINHOLE {width} {height} {focolength} {focolength} {W // 2} {H // 2}\n"
-            cameratxtlist.append(cameraline)
-
-            image_id = db.add_image(pngname, camera_id,
-                                    prior_q=np.array((colmapQ[0], colmapQ[1], colmapQ[2], colmapQ[3])),
-                                    prior_t=np.array((T[0], T[1], T[2])), image_id=i + 1)
-            db.commit()
-        db.close()
-
-    savetxt.write_text("".join(imagetxtlist))
-    savecamera.write_text("".join(cameratxtlist))
-    savepoints.write_text("")  # Creating an empty points3D.txt file
 
 
 if __name__ == "__main__" :

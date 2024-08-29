@@ -20,7 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import os 
+import os
+from pathlib import Path
+
 import cv2 
 import glob 
 import tqdm 
@@ -296,7 +298,7 @@ if __name__ == "__main__" :
 
     videoslist = glob.glob(originalvideo + "*.mp4")
     for v in tqdm.tqdm(videoslist):
-        extractframes(v)
+        extractframes(Path(v))
 
 
     softlinkdataset(originalpath, dstpath)
