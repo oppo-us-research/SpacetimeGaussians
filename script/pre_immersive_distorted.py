@@ -279,7 +279,7 @@ if __name__ == "__main__" :
 
     videoslist = sorted(videopath.glob("*.mp4"))
     for v in tqdm.tqdm(videoslist, desc="extract frames"):
-        extractframes(v, startframe, endframe)
+        extractframes(v)
 
     softlinkdataset(videopath, dstpath)
   
