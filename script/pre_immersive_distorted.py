@@ -162,14 +162,10 @@ def getdistortedflow(img: np.ndarray, cam_intr: np.ndarray, dist_coeff: np.ndarr
 
 
 def imageundistort(video, offsetlist=[0],focalscale=1.0, fixfocal=None):
-    import cv2
-    import numpy as np
-    import os 
-    import json 
-    with open(os.path.join(video, "models.json"), "r") as f:
-                meta = json.load(f)
+    with open(video / "models.json", "r") as f:
+        meta = json.load(f)
 
-    for idx , camera in enumerate(meta):
+    for idx, camera in enumerate(tqdm.tqdm(meta, desc="undistort")):
         folder = camera['name'] # camera_0001
         view = camera
         intrinsics = np.array([[view['focal_length'], 0.0, view['principal_point'][0]],
@@ -178,19 +174,18 @@ def imageundistort(video, offsetlist=[0],focalscale=1.0, fixfocal=None):
         dis_cef = np.zeros((4))
 
         dis_cef[:2] = np.array(view['radial_distortion'])[:2]
-        print("done one camera")
         map1, map2 = None, None
         for offset in offsetlist:
-            videofolder = os.path.join(video, folder)
-            imagepath = os.path.join(videofolder, str(offset) + ".png")
-            imagesavepath = os.path.join(video, "colmap_" + str(offset), "input", folder + ".png")
-            if os.path.exists(imagesavepath):
+            imagepath = video / folder / f"{offset}.png"
+            imagesavepath = video / f"colmap_{offset}" / "input" / f"{folder}.png"
+            
+            if imagesavepath.exists():
                 pass
             else:
-                inputimagefolder = os.path.join(video, "colmap_" + str(offset), "input")
-                if not os.path.exists(inputimagefolder):
-                    os.makedirs(inputimagefolder)
-                assert os.path.exists(imagepath)
+                inputimagefolder = video / f"colmap_{offset}" / "input"
+                inputimagefolder.mkdir(exist_ok=True, parents=True)
+
+                assert imagepath.exists()
                 image = cv2.imread(imagepath).astype(np.float32) #/ 255.0
                 h, w = image.shape[:2]
 
@@ -213,27 +208,21 @@ def imageundistort(video, offsetlist=[0],focalscale=1.0, fixfocal=None):
                 undistorted_image = undistorted_image.clip(0,255.0).astype(np.uint8)
            
                 cv2.imwrite(imagesavepath, undistorted_image)
-
+    
             if offset == 0:
-                distortionmapperpath = os.path.join(video, folder  + ".npy")
-                 
-                if os.path.exists(distortionmapperpath):
+                distortionmapperpath = video / f"{folder}.npy"
+
+                if distortionmapperpath.exists():
                     print("already exists mapper")
-                    pass 
+                    pass
                 else:
                     distortingflow = getdistortedflow(image, intrinsics, dis_cef, "linear", crop_output=False, scale=1.0, knew=knew)
-                    print("saved distortion mappers")
-                    np.save(os.path.join(video, folder  + ".npy"), distortingflow)
+                    # print("saved distortion mappers")
+                    np.save(distortionmapperpath, distortingflow)
 
 
 
-
-
-
-def softlinkdataset(original_str, target_str):
-    originalpath = Path(original_str)
-    path = Path(target_str)
-
+def softlinkdataset(originalpath: Path, path: Path):
     videofolderlist = [f for f in sorted(originalpath.glob("camera_*")) if f.is_dir()]
     path.mkdir(exist_ok=True)
     for videofolder in videofolderlist:
@@ -254,7 +243,7 @@ if __name__ == "__main__" :
 
 
     args = parser.parse_args()
-    videopath = args.videopath
+    videopath = Path(args.videopath)
 
     startframe = args.startframe
     endframe = args.endframe
@@ -264,21 +253,19 @@ if __name__ == "__main__" :
     if startframe < 0 or endframe > 300:
         print("frame must in range 0-300")
         quit()
-    if not os.path.exists(videopath):
+    if not videopath.exists():
         print("path not exist")
         quit()
     
-    if not videopath.endswith("/"):
-        videopath = videopath + "/"
 
-    srcscene = videopath.split("/")[-2]
+    srcscene = videopath.name
     if srcscene not in Immersiveseven:
         print("scene not in Immersiveseven", Immersiveseven)
         print("Please check if the scene name is correct")
         quit()
     
 
-    if "04_Trucks" in videopath:
+    if "04_Trucks" == srcscene:
         print('04_Trucks')
         if endframe > 150:
             endframe = 150 
@@ -286,21 +273,18 @@ if __name__ == "__main__" :
     postfix  = "_dist" # distored model
 
     scene = srcscene + postfix
-    originalpath = videopath #" 
-    originalvideo = originalpath# 43 1
-    dstpath = videopath[:-1] + postfix # the path to save the dataset.
+    dstpath = videopath.with_name(videopath.name + postfix)  # the path to save the dataset.
 
     scale = immmersivescaledict[scene]
 
+    videoslist = sorted(videopath.glob("*.mp4"))
+    for v in tqdm.tqdm(videoslist, desc="extract frames"):
+        extractframes(v, startframe, endframe)
 
-    videoslist = glob.glob(originalvideo + "*.mp4")
-    for v in tqdm.tqdm(videoslist):
-        extractframes(Path(v))
-
-    softlinkdataset(originalpath, dstpath)
+    softlinkdataset(videopath, dstpath)
   
     
-    imageundistort(dstpath, offsetlist=[i for i in range(startframe,endframe)],focalscale=scale, fixfocal=None)
+    imageundistort(dstpath, offsetlist=list(range(startframe,endframe)),focalscale=scale, fixfocal=None)
 
 
     try:
@@ -309,5 +293,6 @@ if __name__ == "__main__" :
     except:
         print("create colmap input failed, better clean the data and try again")
         quit()
+        
     for offset in range(startframe, endframe):
         getcolmapsingleimdistort(dstpath, offset=offset)
