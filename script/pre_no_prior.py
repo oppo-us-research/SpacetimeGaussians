@@ -98,26 +98,15 @@ def convert_selected_cam_matrix_to_colmapdb(path, offset=0,ref_frame=0,image_ext
     db = COLMAPDatabase.connect(db_file)
 
     db.create_tables()
-
-
-    helperdict = {}
-    totalcamname = []
-    for idx, key in enumerate(cam_extrinsics): # first is cam20_ so we strictly sort by camera name
-        extr = cam_extrinsics[key]
-        intr = cam_intrinsics[extr.camera_id]
-        totalcamname.append(extr.name)
-        helperdict[extr.name] = [extr, intr]
-    
-    sortedtotalcamelist =  natsort.natsorted(totalcamname)
-    sortednamedict = {}
-    for i in  range(len(sortedtotalcamelist)):
-        sortednamedict[sortedtotalcamelist[i]] = i # map each cam with a number
+        
+    cam_extrinsics_by_name = {extr.name: extr for extr in cam_extrinsics.values()}
     
     videopaths = sorted((refprojectfolder / "images").glob(f"*.{image_ext}"))
     
     for i, videopath in enumerate(videopaths):
         filename = videopath.name #eg cam00.png
-        extr, intr =  helperdict[filename] # extr.name
+        extr = cam_extrinsics_by_name[filename]
+        intr = cam_intrinsics[extr.camera_id]
 
         w, h, params = intr.width, intr.height, intr.params
         focolength = intr.params[0]
@@ -137,7 +126,7 @@ def convert_selected_cam_matrix_to_colmapdb(path, offset=0,ref_frame=0,image_ext
         cameraline = f"{id} OPENCV {w} {h} {' '.join(params.astype(str))} \n"
         cameratxtlist.append(cameraline)
         
-        image_id = db.add_image(filename, camera_id,  prior_q=np.array((colmapQ[0], colmapQ[1], colmapQ[2], colmapQ[3])), prior_t=np.array((T[0], T[1], T[2])), image_id=id)
+        image_id = db.add_image(filename, camera_id,  prior_q=colmapQ, prior_t=T, image_id=id)
         db.commit()
     db.close()
 

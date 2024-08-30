@@ -53,7 +53,7 @@ def write_colmap(path, cameras, offset=0):
         camera_id = db.add_camera(1, w, h, params)
         cameraline = f"{id} PINHOLE {w} {h} {fx} {fy} {cx} {cy}\n"
         cameratxtlist.append(cameraline)
-        image_id = db.add_image(filename, camera_id,  prior_q=np.array((colmapQ[0], colmapQ[1], colmapQ[2], colmapQ[3])), prior_t=np.array((T[0], T[1], T[2])), image_id=id)
+        image_id = db.add_image(filename, camera_id,  prior_q=colmapQ, prior_t=T, image_id=id)
         db.commit()
     db.close()
 
