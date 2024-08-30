@@ -42,9 +42,10 @@ from thirdparty.gaussian_splatting.helper3dg import getcolmapsinglen3d
 
 
 
-def extractframes(videopath: Path, startframe=0, endframe=300, downscale=1):
-    output_dir = videopath.with_suffix('')
-    if all((output_dir / f"{i}.png").exists() for i in range(startframe, endframe)):
+def extractframes(videopath: Path, startframe=0, endframe=300, downscale=1, save_subdir = '', ext='png'):
+    output_dir = videopath.parent / save_subdir / videopath.stem
+        
+    if all((output_dir / f"{i}.{ext}").exists() for i in range(startframe, endframe)):
         print(f"Already extracted all the frames in {output_dir}")
         return
 
@@ -63,7 +64,7 @@ def extractframes(videopath: Path, startframe=0, endframe=300, downscale=1):
             new_width, new_height = int(frame.shape[1] / downscale), int(frame.shape[0] / downscale)
             frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
-        cv2.imwrite(str(output_dir / f"{i}.png"), frame)
+        cv2.imwrite(str(output_dir / f"{i}.{ext}"), frame)
 
     cam.release()
 

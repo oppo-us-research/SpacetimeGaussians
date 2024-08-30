@@ -23,7 +23,9 @@
 
 
 
-import os 
+import os
+from pathlib import Path
+
 import cv2 
 import glob 
 import tqdm 
@@ -33,6 +35,9 @@ import pickle
 import sys 
 import argparse
 import natsort
+
+from script.pre_n3d import extractframes
+
 sys.path.append(".")
 from thirdparty.gaussian_splatting.utils.my_utils import posetow2c_matrcs, rotmat2qvec
 from thirdparty.colmap.pre_colmap import * 
@@ -43,66 +48,21 @@ from thirdparty.gaussian_splatting.colmap_loader import read_extrinsics_binary, 
 def get_cam_name(video_path):
     return os.path.splitext(os.path.basename(video_path))[0] 
 
-def extract_frames(video_path, start_frame_num, end_frame_num, image_ext) :
-    """
-    Extracts a specified number of frames from a video and saves them as PNG files.
-    
-    Args:
-    video_path (str): The path to the video file.
-    duration (int): The number of frames to extract.
-    """
-    cam = cv2.VideoCapture(video_path)
-    video_dir = os.path.dirname(video_path)
-    save_dir = os.path.join(video_dir, "frames")
-    video_counter = 0
-    success = True
-    # video name
-    video_name = get_cam_name(video_path)
-    # output dir 
-    output_dir = os.path.join(save_dir, video_name)
-    
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    
-    while video_counter < end_frame_num:
-        try:
-            ret, frame = cam.read()
-            if not ret:
-                print(f"Failed to read frame at {video_counter}. Ending extraction.")
-                break
-            save_path = os.path.join(output_dir, f"{video_counter}."+image_ext)
-            if os.path.exists(save_path):
-                    print("skiped")
-            if video_counter > start_frame_num -1:
-
-                cv2.imwrite(save_path, frame)
-            video_counter += 1 
-        except Exception as e:
-            success = False
-            print(f"Error while extracting frames: {e}")
-            break
-    
-    cam.release()
-    if success:
-        print(f"Successfully extracted {video_counter} frames from {video_path}")
-    else:
-        print(f"Failed to extract frames from {video_path}")
-
 
 def prepare_colmap(folder, offset, extension, point_root):
-    folderlist =  [os.path.join(folder, sub_dir) for sub_dir in os.listdir(folder) ] 
+    folderlist =  sorted(folder.iterdir())
 
-
-    savedir = os.path.join(point_root, "colmap_" + str(offset))
-    savedir = os.path.join(savedir, "input")
-    if not os.path.exists(savedir):
-        os.makedirs(savedir)
+    savedir = point_root / f"colmap_{offset}" / "input"
+    savedir.mkdir(exist_ok=True, parents=True)
+        
     for folder in folderlist :
-        imagepath = os.path.join(folder, str(offset) + "." + extension)
-        imagesavepath = os.path.join(savedir, folder.split("/")[-1] + "." + extension)
-
-        shutil.copy(imagepath, imagesavepath)
-
+        imagepath = folder / f"{offset}.{extension}"
+        imagesavepath = savedir / f"{folder.name}.{extension}"
+        
+        if (imagesavepath.exists()):
+            continue
+            
+        imagesavepath.symlink_to(imagepath.resolve())
 
     
 
@@ -112,31 +72,30 @@ def convert_selected_cam_matrix_to_colmapdb(path, offset=0,ref_frame=0,image_ext
     
     # 
 
-    projectfolder = os.path.join(path, "colmap_" + str(offset))
-    refprojectfolder =  os.path.join(path, "colmap_" + str(ref_frame))
-    manualfolder = os.path.join(projectfolder, "manual")
+    projectfolder = path / f"colmap_{offset}"
+    refprojectfolder =  path / f"colmap_{ref_frame}"
+    manualfolder = projectfolder / "manual"
 
     
-    cameras_extrinsic_file = os.path.join(refprojectfolder, "distorted/sparse/0/", "images.bin") # from distorted?
-    cameras_intrinsic_file = os.path.join(refprojectfolder, "distorted/sparse/0/", "cameras.bin")
+    cameras_extrinsic_file = refprojectfolder / "distorted" / "sparse" / "0" / "images.bin" # from distorted?
+    cameras_intrinsic_file = refprojectfolder / "distorted" / "sparse" / "0" / "cameras.bin"
 
     cam_extrinsics = read_extrinsics_binary(cameras_extrinsic_file)
     cam_intrinsics = read_intrinsics_binary(cameras_intrinsic_file)
 
-    if not os.path.exists(manualfolder):
-        os.makedirs(manualfolder)
-     
+    manualfolder.mkdir(exist_ok=True)     
     
-    savetxt = os.path.join(manualfolder, "images.txt")
-    savecamera = os.path.join(manualfolder, "cameras.txt")
-    savepoints = os.path.join(manualfolder, "points3D.txt")
+    savetxt = manualfolder / "images.txt"
+    savecamera = manualfolder / "cameras.txt"
+    savepoints = manualfolder / "points3D.txt"
     imagetxtlist = []
     cameratxtlist = []
-    if os.path.exists(os.path.join(projectfolder, "input.db")):
-        print("remove previus db file")
-        os.remove(os.path.join(projectfolder, "input.db"))
 
-    db = COLMAPDatabase.connect(os.path.join(projectfolder, "input.db"))
+    db_file = projectfolder / "input.db"
+    if db_file.exists():
+        db_file.unlink()
+
+    db = COLMAPDatabase.connect(db_file)
 
     db.create_tables()
 
@@ -153,57 +112,38 @@ def convert_selected_cam_matrix_to_colmapdb(path, offset=0,ref_frame=0,image_ext
     sortednamedict = {}
     for i in  range(len(sortedtotalcamelist)):
         sortednamedict[sortedtotalcamelist[i]] = i # map each cam with a number
+    
+    videopaths = sorted((refprojectfolder / "images").glob(f"*.{image_ext}"))
+    
+    for i, videopath in enumerate(videopaths):
+        filename = videopath.name #eg cam00.png
+        extr, intr =  helperdict[filename] # extr.name
 
-    videopath = glob.glob(refprojectfolder + "/images/*."+image_ext)
-    for i in range(len(videopath)):
-        cameraname = get_cam_name(videopath[i])  #"cam" + str(i).zfill(2)
-        cameranameaskey = cameraname + "." + image_ext
-        extr, intr =  helperdict[cameranameaskey] # extr.name
-
-        width, height, params = intr.width, intr.height, intr.params
+        w, h, params = intr.width, intr.height, intr.params
         focolength = intr.params[0]
-        fw, fh = intr.params[2], intr.params[3]
+        fx, fy = intr.params[2], intr.params[3]
 
         colmapQ = extr.qvec
         T = extr.tvec
         
 
-        imageid = str(i+1)
-        cameraid = imageid
-        pngname = cameraname + "." + image_ext
+        id = str(i+1)
         
-        line =  imageid + " "
-
-        for j in range(4):
-            line += str(colmapQ[j]) + " "
-        for j in range(3):
-            line += str(T[j]) + " "
-        line = line  + cameraid + " " + pngname + "\n"
-        empltyline = "\n"
+        line = f"{id} " + " ".join(map(str, colmapQ)) + " " + " ".join(map(str, T)) + f" {id} {filename}\n"
         imagetxtlist.append(line)
-        imagetxtlist.append(empltyline)
+        imagetxtlist.append("\n")
 
-        
-
-
-        camera_id = db.add_camera(4, width, height, params)
-        strparams = [str(ele) for ele in params]
-        cameraline = str(i+1) + " " + "OPENCV " + str(width) +  " " + str(height)  +  " " + " ".join(strparams) + " \n"
+        camera_id = db.add_camera(4, w, h, params)
+        cameraline = f"{id} OPENCV {w} {h} {' '.join(params.astype(str))} \n"
         cameratxtlist.append(cameraline)
         
-        image_id = db.add_image(pngname, camera_id,  prior_q=np.array((colmapQ[0], colmapQ[1], colmapQ[2], colmapQ[3])), prior_t=np.array((T[0], T[1], T[2])), image_id=i+1)
+        image_id = db.add_image(filename, camera_id,  prior_q=np.array((colmapQ[0], colmapQ[1], colmapQ[2], colmapQ[3])), prior_t=np.array((T[0], T[1], T[2])), image_id=id)
         db.commit()
     db.close()
 
-    with open(savetxt, "w") as f:
-        for line in imagetxtlist :
-            f.write(line)
-    with open(savecamera, "w") as f:
-        for line in cameratxtlist :
-            f.write(line)
-    with open(savepoints, "w") as f:
-        pass 
-    print("done")
+    savetxt.write_text("".join(imagetxtlist))
+    savecamera.write_text("".join(cameratxtlist))
+    savepoints.write_text("")
 
 if __name__ == "__main__" :
     """
@@ -235,7 +175,7 @@ if __name__ == "__main__" :
    
     # get input config
     image_ext = args.imageext
-    videos_dir = args.videosdir
+    videos_dir = Path(args.videosdir)
     start_frame_num = args.startframe
     end_frame_num = args.endframe
     duration = args.endframe - args.startframe
@@ -250,25 +190,23 @@ if __name__ == "__main__" :
         print("start frame must smaller than end frame")
         quit()
 
-    if not os.path.exists(videos_dir):
+    if not videos_dir.exists():
         print("path not exist")
         quit()
-    
-    if not videos_dir.endswith("/"):
-        videos_dir = videos_dir + "/"
+
     
     #step 1 videos to pngs. TODO .jpg but jpg contains artifacts.
     print(f"Start extracting {duration} frames from videos at {videos_dir}")
-    video_path_list = glob.glob(os.path.join(videos_dir, "*.mp4"))
+    video_path_list = sorted(videos_dir.glob("*.mp4"))
     for video_path in tqdm.tqdm(video_path_list):
-        extract_frames(video_path, start_frame_num, end_frame_num, image_ext)
+        extractframes(video_path, start_frame_num, end_frame_num, save_subdir='frames', ext=image_ext)
     
     
     # create video path
-    decoded_frame_root = os.path.join(videos_dir, "frames")
+    decoded_frame_root = videos_dir / "frames"
 
     ## step2 prepare colmap input 
-    point_root = os.path.join(videos_dir, "point")
+    point_root = videos_dir / "point"
     print("start preparing colmap image input")
     for offset in range(start_frame_num, end_frame_num):
         prepare_colmap(decoded_frame_root, offset, image_ext, point_root)
@@ -276,11 +214,11 @@ if __name__ == "__main__" :
 
 
     # step3, colmap without gt pose 
-    colmap_project_root = os.path.join(videos_dir, "point")
+    colmap_project_root = videos_dir / "point"
 
-    pose_ref_frame_project = os.path.join(colmap_project_root, "colmap_" + str(pose_ref_frame_num))
-    cmd = "python thirdparty/gaussian_splatting/convert.py -s " + pose_ref_frame_project
-    
+    pose_ref_frame_project = colmap_project_root / f"colmap_{pose_ref_frame_num}"
+    cmd = f"python thirdparty/gaussian_splatting/convert.py -s {pose_ref_frame_project}"
+
     exit_code = os.system(cmd)
     if exit_code != 0:
         exit(exit_code)
