@@ -41,7 +41,6 @@ import pickle
 from scipy.spatial.transform import Rotation
 import sys 
 
-from script.utils_pre import write_colmap
 
 sys.path.append(".")
 from thirdparty.gaussian_splatting.utils.my_utils import posetow2c_matrcs, rotmat2qvec, qvec2rotmat
@@ -49,6 +48,8 @@ from thirdparty.gaussian_splatting.utils.graphics_utils import focal2fov, fov2fo
 from thirdparty.colmap.pre_colmap import *
 from thirdparty.gaussian_splatting.helper3dg import getcolmapsingleimdistort 
 from script.pre_n3d import extractframes
+from script.utils_pre import write_colmap
+
 SCALEDICT = {}
 
 
