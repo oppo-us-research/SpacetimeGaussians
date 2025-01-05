@@ -86,7 +86,7 @@ def imageundistort_no_mapper(video, offsetlist=[0],focalscale=1.0, fixfocal=None
             
             if not imagesavepath.exists():
                 try:
-                    image = cv2.imread(imagepath).astype(np.float32) #/ 255.0
+                    image = cv2.imread(str(imagepath)).astype(np.float32) #/ 255.0
                 except:
                     print("failed to read image", imagepath)
                     quit()
