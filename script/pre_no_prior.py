@@ -35,10 +35,9 @@ import pickle
 import sys 
 import argparse
 import natsort
+sys.path.append(".")
 
 from script.pre_n3d import extractframes
-
-sys.path.append(".")
 from thirdparty.gaussian_splatting.utils.my_utils import posetow2c_matrcs, rotmat2qvec
 from thirdparty.colmap.pre_colmap import * 
 from thirdparty.gaussian_splatting.helper3dg import getcolmapsinglen3d
