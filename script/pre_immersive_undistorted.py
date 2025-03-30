@@ -111,7 +111,7 @@ def imageundistort_no_mapper(video, offsetlist=[0],focalscale=1.0, fixfocal=None
                 undistorted_image = cv2.remap(image, map1, map2, interpolation=cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT)
                 undistorted_image = undistorted_image.clip(0,255.0).astype(np.uint8)
 
-                cv2.imwrite(imagesavepath, undistorted_image)
+                cv2.imwrite(str(imagesavepath), undistorted_image)
             else:
                 print("already exists")
 

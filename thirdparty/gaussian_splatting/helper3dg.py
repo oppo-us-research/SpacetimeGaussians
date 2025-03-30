@@ -51,35 +51,48 @@ def getparser():
     parser.add_argument("--rdpip", type=str, default = "v2")
     parser.add_argument("--configpath", type=str, default = "None")
 
-    args = parser.parse_args(sys.argv[1:])
-    args.save_iterations.append(args.iterations)
     
-    print("Optimizing " + args.model_path)
     
-    # Initialize system state (RNG)
-    safe_state(args.quiet)
+    # 1. Get default values
+    defaults = vars(parser.parse_args([]))
 
+    # 2. Get actual user-provided args
+    args = parser.parse_args()
 
-    torch.autograd.set_detect_anomaly(args.detect_anomaly)
+    # Optional: append current iteration to save list
+    args.save_iterations.append(args.iterations)  # Only if you use this logic elsewhere
 
-    # incase we provide config file not directly pass to the file
+    # 3. Load config if provided
     if os.path.exists(args.configpath) and args.configpath != "None":
-        print("overload config from " + args.configpath)
-        config = json.load(open(args.configpath))
-        for k in config.keys():
-            try:
-                value = getattr(args, k) 
-                newvalue = config[k]
-                setattr(args, k, newvalue)
-            except:
-                print("failed set config: " + k)
-        print("finish load config from " + args.configpath)
-    else:
-        raise ValueError("config file not exist or not provided")
+        print("Overriding from config:", args.configpath)
+        with open(args.configpath) as f:
+            config = json.load(f)
+
+        for k, v in config.items():
+            if hasattr(args, k):
+                current_val = getattr(args, k)
+                default_val = defaults.get(k)
+
+                if current_val == default_val:
+                    setattr(args, k, v)
+                    
+                else:
+                    print(f"Kept CLI override for '{k}': {current_val}")
+            else:
+                print(f"Unknown config key '{k}', skipping.")
+
+        print("Finished loading config.")
+
+    #
+    print(args)
+    print("Optimizing", args.model_path)
+
+    safe_state(args.quiet)
+    torch.autograd.set_detect_anomaly(args.detect_anomaly)
 
     if not os.path.exists(args.model_path):
         os.makedirs(args.model_path)
-    
+
 
     return args, lp.extract(args), op.extract(args), pp.extract(args)
 
@@ -105,26 +118,30 @@ def gettestparse():
     parser.add_argument("--configpath", type=str, default = "1")
 
     parser.add_argument("--quiet", action="store_true")
+    
+    # record default value 
+    defaults = vars(parser.parse_args([]))
+
+    # update newest terminal command
     args = get_combined_args(parser)
     print("Rendering " + args.model_path)
-    # configpath
     safe_state(args.quiet)
-    
     multiview = True if args.valloader.endswith("mv") else False
 
+    # if config file exisits
     if os.path.exists(args.configpath) and args.configpath != "None":
         print("overload config from " + args.configpath)
         config = json.load(open(args.configpath))
-        for k in config.keys():
-            try:
-                value = getattr(args, k) 
-                newvalue = config[k]
-                setattr(args, k, newvalue)
-            except:
-                print("failed set config: " + k)
+        for k, v in config.items():
+            # not passed in by user
+            if hasattr(args, k) and getattr(args, k) == defaults.get(k):
+                setattr(args, k, v)
+            else:
+                print(f"Keeping command line value for '{k}'")
+
         print("finish load config from " + args.configpath)
         print("args: " + str(args))
-        
+
     return args, model.extract(args), pipeline.extract(args), multiview
     
 def getcolmapsinglen3d(folder, offset):

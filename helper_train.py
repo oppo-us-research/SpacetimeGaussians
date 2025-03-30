@@ -391,7 +391,7 @@ def trbfunction(x):
     return torch.exp(-1*x.pow(2))
 
 def setgtisint8(value):
-    print("set current resized gt image as int8 for memory: ", value)
+    print("1 means set current resized gt image as int8 for memory 0 for not : ", value)
     os.environ['gtisint8'] = str(value)
 def getgtisint8():
     #print("get current gt", bool(int(os.getenv('gtisint8'))))
